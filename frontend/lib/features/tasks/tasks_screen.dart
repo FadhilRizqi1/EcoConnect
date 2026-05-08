@@ -3,6 +3,10 @@ import 'package:confetti/confetti.dart';
 import '../../core/theme/app_theme.dart';
 import '../../services/api_service.dart';
 
+/// Global notifier — Tasks screen broadcasts this after a successful check-in
+/// so Dashboard can listen and auto-refresh its stats. (Fix #2)
+final dashboardRefreshNotifier = ValueNotifier<DateTime?>(null);
+
 /// Layar Tugas — fetch dari /api/actions, check-in via showModalBottomSheet
 /// Fitts's Law: tombol besar di bawah
 /// Peak-End Rule: konfeti setelah check-in berhasil
@@ -347,13 +351,16 @@ class _CheckInSheetState extends State<_CheckInSheet> {
     final estimasiPoin = (points * inputVal).round();
     final estimasiKarbon = carbon * inputVal;
 
-    return Padding(
+    // Fix 1: Wrap in SingleChildScrollView so keyboard never overflows
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      // viewInsets.bottom pushes the sheet up when keyboard appears
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-      child: Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-        ),
+      child: SingleChildScrollView(
+        physics: const ClampingScrollPhysics(),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -366,7 +373,7 @@ class _CheckInSheetState extends State<_CheckInSheet> {
             ),
 
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -397,7 +404,6 @@ class _CheckInSheetState extends State<_CheckInSheet> {
                   ),
 
                   const SizedBox(height: 24),
-                  // Input utama
                   Text(
                     'Berapa $unit yang kamu lakukan?',
                     style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, fontFamily: 'Poppins', color: AppColors.textPrimary),
@@ -407,6 +413,7 @@ class _CheckInSheetState extends State<_CheckInSheet> {
                     controller: _inputCtrl,
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     textAlign: TextAlign.center,
+                    autofocus: false,
                     onChanged: (_) => setState(() {}),
                     style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: AppColors.primaryGreen, fontFamily: 'Poppins'),
                     decoration: InputDecoration(
@@ -424,10 +431,7 @@ class _CheckInSheetState extends State<_CheckInSheet> {
                   AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
                     padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: AppColors.primaryGreenSoft,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                    decoration: BoxDecoration(color: AppColors.primaryGreenSoft, borderRadius: BorderRadius.circular(12)),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
@@ -435,7 +439,7 @@ class _CheckInSheetState extends State<_CheckInSheet> {
                           Text('⭐ $estimasiPoin', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.primaryGreen, fontFamily: 'Poppins')),
                           const Text('Poin didapat', style: TextStyle(fontSize: 10, color: AppColors.textSecondary, fontFamily: 'Poppins')),
                         ]),
-                        Container(width: 1, height: 36, color: AppColors.primaryGreenMint.withOpacity(0.3)),
+                        Container(width: 1, height: 36, color: AppColors.primaryGreenMint),
                         Column(children: [
                           Text('🌍 ${estimasiKarbon.toStringAsFixed(2)} kg', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.primaryGreen, fontFamily: 'Poppins')),
                           const Text('CO₂ dihemat', style: TextStyle(fontSize: 10, color: AppColors.textSecondary, fontFamily: 'Poppins')),
@@ -450,8 +454,9 @@ class _CheckInSheetState extends State<_CheckInSheet> {
                     controller: _notesCtrl,
                     style: const TextStyle(fontFamily: 'Poppins', fontSize: 14),
                     maxLines: 2,
+                    textInputAction: TextInputAction.done,
                     decoration: InputDecoration(
-                      hintText: 'Catatan opsional... (misal: pergi ke kantor via Sudirman)',
+                      hintText: 'Catatan opsional... (misal: rute Sudirman)',
                       hintStyle: const TextStyle(color: AppColors.textMuted, fontFamily: 'Poppins', fontSize: 13),
                       filled: true,
                       fillColor: AppColors.backgroundLight,
@@ -465,7 +470,6 @@ class _CheckInSheetState extends State<_CheckInSheet> {
                   ],
 
                   const SizedBox(height: 20),
-                  // Fitts's Law: tombol besar penuh
                   ElevatedButton(
                     onPressed: _submitting ? null : _submit,
                     style: ElevatedButton.styleFrom(
@@ -479,7 +483,6 @@ class _CheckInSheetState extends State<_CheckInSheet> {
                         ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
                         : const Text('✅ Konfirmasi Check-in', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, fontFamily: 'Poppins')),
                   ),
-                  const SizedBox(height: 24),
                 ],
               ),
             ),
