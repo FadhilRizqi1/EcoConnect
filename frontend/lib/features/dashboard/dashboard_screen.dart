@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/app_theme.dart';
 import '../../services/api_service.dart';
 import '../../services/auth_service.dart';
+import '../tasks/tasks_screen.dart' show dashboardRefreshNotifier;
 
 /// Beranda — menampilkan dashboard real dari backend
 /// Von Restorff: Amber card untuk misi premium
@@ -24,6 +25,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void initState() {
     super.initState();
     _load();
+    // Fix #2: listen for check-in events from TasksScreen and auto-refresh
+    dashboardRefreshNotifier.addListener(_onCheckinCompleted);
+  }
+
+  void _onCheckinCompleted() {
+    if (mounted) _load();
+  }
+
+  @override
+  void dispose() {
+    dashboardRefreshNotifier.removeListener(_onCheckinCompleted);
+    super.dispose();
   }
 
   Future<void> _load() async {
@@ -102,9 +115,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         _buildVonRestorffCard(_premiumActions.first),
                         const SizedBox(height: 28),
                       ],
-                      const Text('Mulai Dari Sini', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, fontFamily: 'Poppins', color: AppColors.textPrimary)),
+                      // Fix #3: Replace 'Mulai Dari Sini' with 'Aktivitas Terakhir'
+                      const Text('Aktivitas Terakhir', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, fontFamily: 'Poppins', color: AppColors.textPrimary)),
                       const SizedBox(height: 14),
-                      _buildQuickActionRow(),
+                      _buildRecentActivity(),
                     ],
                   ),
       ),
@@ -237,15 +251,79 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildQuickActionRow() {
-    return Row(
-      children: [
-        _QuickAction(icon: '✅', label: 'Check-in Aksi', color: AppColors.primaryGreen, onTap: () => context.go('/tugas')),
-        const SizedBox(width: 12),
-        _QuickAction(icon: '👥', label: 'Komunitas', color: AppColors.primaryBlueMid, onTap: () => context.go('/komunitas')),
-        const SizedBox(width: 12),
-        _QuickAction(icon: '🏆', label: 'Peringkat', color: AppColors.accentAmber, onTap: () => context.go('/papan-peringkat')),
-      ],
+  // Fix #3: 'Aktivitas Terakhir' — shows recently completed actions from profile
+  Widget _buildRecentActivity() {
+    // tugas array from profile API (UserTask with nested Task)
+    final profil = _profile?['profil'] as Map<String, dynamic>? ?? {};
+    final tugasList = (profil['tasks'] as List<dynamic>?) ?? [];
+    // Take last 3, show newest first
+    final recent = tugasList.reversed.take(3).toList();
+
+    if (recent.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(color: AppColors.primaryGreenSoft, borderRadius: BorderRadius.circular(12)),
+              child: const Center(child: Text('🌱', style: TextStyle(fontSize: 22))),
+            ),
+            const SizedBox(width: 14),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Belum ada aktivitas', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, fontFamily: 'Poppins', color: AppColors.textPrimary)),
+                  Text('Selesaikan aksi pertamamu di tab Tugas!', style: TextStyle(fontSize: 12, color: AppColors.textSecondary, fontFamily: 'Poppins')),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      children: recent.map<Widget>((ut) {
+        final task = ut['Task'] as Map<String, dynamic>? ?? ut;
+        final title = task['title']?.toString() ?? 'Aksi Hijau';
+        final category = task['category']?.toString() ?? '';
+        final points = (ut['points_earned'] ?? task['impact_points'] ?? 0) as num;
+        final emoji = const {
+          'Diet Vegan': '🥗', 'Hemat Energi': '⚡',
+          'Transportasi Hijau': '🚲', 'Kelola Sampah': '♻️', 'Hemat Air': '💧',
+        }[category] ?? '🌿';
+
+        return Container(
+          margin: const EdgeInsets.only(bottom: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 6, offset: const Offset(0, 2))],
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(color: AppColors.primaryGreenSoft, borderRadius: BorderRadius.circular(10)),
+                child: Center(child: Text(emoji, style: const TextStyle(fontSize: 20))),
+              ),
+              const SizedBox(width: 12),
+              Expanded(child: Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, fontFamily: 'Poppins', color: AppColors.textPrimary), maxLines: 1, overflow: TextOverflow.ellipsis)),
+              const SizedBox(width: 8),
+              Text('+${points.toInt()} poin', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primaryGreen, fontFamily: 'Poppins')),
+            ],
+          ),
+        );
+      }).toList(),
     );
   }
 }
