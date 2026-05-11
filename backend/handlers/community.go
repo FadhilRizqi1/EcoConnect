@@ -76,13 +76,18 @@ func ToggleJoinCommunity(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "ID komunitas tidak valid"})
 	}
 
+	var community models.Community
+	if err := config.DB.First(&community, communityID).Error; err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "Komunitas tidak ditemukan"})
+	}
+
 	var member models.CommunityMember
 	result := config.DB.Where("user_id = ? AND community_id = ?", userID, communityID).First(&member)
 
 	if result.Error == nil {
 		// Sudah join, maka keluar (leave)
 		config.DB.Delete(&member)
-		config.DB.Exec("UPDATE communities SET member_count = member_count - 1 WHERE id = ?", communityID)
+		config.DB.Exec("UPDATE communities SET member_count = GREATEST(member_count - 1, 0) WHERE id = ?", communityID)
 		return c.JSON(fiber.Map{"pesan": "Berhasil keluar dari komunitas", "is_joined": false})
 	} else {
 		// Belum join, maka gabung
@@ -96,11 +101,38 @@ func ToggleJoinCommunity(c *fiber.Ctx) error {
 	}
 }
 
+func ensureCommunityMembership(c *fiber.Ctx) (uint, int, error) {
+	userID := c.Locals("user_id").(uint)
+	communityID, err := c.ParamsInt("id")
+	if err != nil {
+		return userID, 0, c.Status(400).JSON(fiber.Map{"error": "ID komunitas tidak valid"})
+	}
+
+	var community models.Community
+	if err := config.DB.First(&community, communityID).Error; err != nil {
+		return userID, communityID, c.Status(404).JSON(fiber.Map{"error": "Komunitas tidak ditemukan"})
+	}
+
+	var count int64
+	if err := config.DB.Model(&models.CommunityMember{}).
+		Where("user_id = ? AND community_id = ?", userID, communityID).
+		Count(&count).Error; err != nil {
+		return userID, communityID, c.Status(500).JSON(fiber.Map{"error": "Gagal memeriksa keanggotaan komunitas"})
+	}
+	if count == 0 {
+		return userID, communityID, c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "Gabung komunitas terlebih dahulu untuk mengakses forum"})
+	}
+
+	return userID, communityID, nil
+}
 
 // GetCommunityMessages mengambil pesan dari komunitas tertentu
 // GET /api/communities/:id/messages
 func GetCommunityMessages(c *fiber.Ctx) error {
-	communityID := c.Params("id")
+	_, communityID, membershipErr := ensureCommunityMembership(c)
+	if membershipErr != nil {
+		return membershipErr
+	}
 
 	var messages []models.ChatMessage
 	err := config.DB.
@@ -125,10 +157,9 @@ func GetCommunityMessages(c *fiber.Ctx) error {
 // SendCommunityMessage mengirim pesan ke komunitas
 // POST /api/communities/:id/messages
 func SendCommunityMessage(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(uint)
-	communityID, err := c.ParamsInt("id")
-	if err != nil {
-		return c.Status(400).JSON(fiber.Map{"error": "ID komunitas tidak valid"})
+	userID, communityID, membershipErr := ensureCommunityMembership(c)
+	if membershipErr != nil {
+		return membershipErr
 	}
 
 	type MsgInput struct {
@@ -155,12 +186,6 @@ func SendCommunityMessage(c *fiber.Ctx) error {
 	if err := config.DB.Create(&msg).Error; err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Gagal mengirim pesan"})
 	}
-
-	// Update jumlah anggota jika belum join
-	config.DB.Exec(
-		"UPDATE communities SET member_count = member_count + 1 WHERE id = ? AND id NOT IN (SELECT community_id FROM chat_messages WHERE user_id = ? AND community_id = ? AND id < ?)",
-		communityID, userID, communityID, msg.ID,
-	)
 
 	// Attach user info untuk response
 	msg.User = user

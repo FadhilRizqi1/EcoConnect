@@ -29,16 +29,31 @@ class _CommunitiesScreenState extends State<CommunitiesScreen> {
   }
 
   Future<void> _loadCommunities() async {
-    setState(() { _loading = true; _error = null; });
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
     try {
       final data = await ApiService.getCommunities(
         kategori: _selectedCategory.isEmpty ? null : _selectedCategory,
       );
-      if (mounted) setState(() { _communities = data; _loading = false; });
+      if (mounted)
+        setState(() {
+          _communities = data;
+          _loading = false;
+        });
     } on ApiException catch (e) {
-      if (mounted) setState(() { _error = e.message; _loading = false; });
+      if (mounted)
+        setState(() {
+          _error = e.message;
+          _loading = false;
+        });
     } catch (e) {
-      if (mounted) setState(() { _error = 'Gagal memuat komunitas'; _loading = false; });
+      if (mounted)
+        setState(() {
+          _error = 'Gagal memuat komunitas';
+          _loading = false;
+        });
     }
   }
 
@@ -56,7 +71,10 @@ class _CommunitiesScreenState extends State<CommunitiesScreen> {
             elevation: 0,
             title: Text(
               'Komunitas Hijau',
-              style: TextStyle(color: Theme.of(context).textTheme.titleLarge?.color, fontWeight: FontWeight.w800, fontFamily: 'Poppins'),
+              style: TextStyle(
+                  color: Theme.of(context).textTheme.titleLarge?.color,
+                  fontWeight: FontWeight.w800,
+                  fontFamily: 'Poppins'),
             ).animate().fade().slideY(begin: -0.2),
             bottom: PreferredSize(
               preferredSize: const Size.fromHeight(60),
@@ -64,33 +82,39 @@ class _CommunitiesScreenState extends State<CommunitiesScreen> {
                 height: 60,
                 child: ListView(
                   scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   children: [
                     _FilterChip(
-                      label: 'Semua', 
-                      icon: LucideIcons.layers, 
-                      selected: _selectedCategory.isEmpty, 
-                      onTap: () => _setCategory('')
-                    ),
+                        label: 'Semua',
+                        icon: LucideIcons.layers,
+                        selected: _selectedCategory.isEmpty,
+                        onTap: () => _setCategory('')),
                     ...AppConstants.kategoriOnboarding.map((k) {
                       final catName = k['nama']!;
                       return _FilterChip(
-                        label: catName, 
-                        icon: _getIconForCategory(catName), 
-                        selected: _selectedCategory == catName, 
-                        onTap: () => _setCategory(catName)
-                      );
+                          label: catName,
+                          icon: _getIconForCategory(catName),
+                          selected: _selectedCategory == catName,
+                          onTap: () => _setCategory(catName));
                     }),
                   ],
                 ),
-              ).animate().fade(delay: const Duration(milliseconds: 200)).slideX(),
+              )
+                  .animate()
+                  .fade(delay: const Duration(milliseconds: 200))
+                  .slideX(),
             ),
           ),
 
           // Content List
           SliverToBoxAdapter(
             child: _loading
-                ? const SizedBox(height: 300, child: Center(child: CircularProgressIndicator(color: AppColors.primaryGreen)))
+                ? const SizedBox(
+                    height: 300,
+                    child: Center(
+                        child: CircularProgressIndicator(
+                            color: AppColors.primaryGreen)))
                 : _error != null
                     ? _buildError()
                     : _communities.isEmpty
@@ -102,9 +126,12 @@ class _CommunitiesScreenState extends State<CommunitiesScreen> {
                                 final delay = e.key * 100;
                                 return _CommunityCard(
                                   community: e.value,
-                                  onTap: () => context.go('/komunitas/${e.value['id']}'),
+                                  onTap: () => _openCommunity(e.value),
                                   onJoin: () => _toggleJoin(e.value['id']),
-                                ).animate().fade(delay: Duration(milliseconds: delay)).slideY(begin: 0.1);
+                                )
+                                    .animate()
+                                    .fade(delay: Duration(milliseconds: delay))
+                                    .slideY(begin: 0.1);
                               }).toList(),
                             ),
                           ),
@@ -119,6 +146,24 @@ class _CommunitiesScreenState extends State<CommunitiesScreen> {
     _loadCommunities();
   }
 
+  void _openCommunity(Map<String, dynamic> community) {
+    if (community['is_joined'] == true) {
+      context.go('/komunitas/${community['id']}');
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Gabung komunitas terlebih dahulu untuk membuka forum.',
+          style: TextStyle(fontFamily: 'Poppins', color: Colors.white),
+        ),
+        backgroundColor: Color(0xFF1A4D2E),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
   Future<void> _toggleJoin(int id) async {
     try {
       final res = await ApiService.toggleJoinCommunity(id);
@@ -128,17 +173,30 @@ class _CommunitiesScreenState extends State<CommunitiesScreen> {
         if (index != -1) {
           _communities[index]['is_joined'] = isJoined;
           if (isJoined) {
-            _communities[index]['member_count'] = (_communities[index]['member_count'] ?? 0) + 1;
+            _communities[index]['member_count'] =
+                (_communities[index]['member_count'] ?? 0) + 1;
           } else {
-            _communities[index]['member_count'] = (_communities[index]['member_count'] ?? 1) - 1;
+            _communities[index]['member_count'] =
+                (_communities[index]['member_count'] ?? 1) - 1;
           }
         }
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res['pesan'], style: const TextStyle(fontFamily: 'Poppins', color: Colors.white)), backgroundColor: const Color(0xFF1A4D2E), behavior: SnackBarBehavior.floating));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(res['pesan'],
+                style: const TextStyle(
+                    fontFamily: 'Poppins', color: Colors.white)),
+            backgroundColor: const Color(0xFF1A4D2E),
+            behavior: SnackBarBehavior.floating));
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString(), style: const TextStyle(fontFamily: 'Poppins', color: Colors.white)), backgroundColor: Colors.redAccent, behavior: SnackBarBehavior.floating));
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(e.toString(),
+                style: const TextStyle(
+                    fontFamily: 'Poppins', color: Colors.white)),
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating));
     }
   }
 
@@ -149,7 +207,9 @@ class _CommunitiesScreenState extends State<CommunitiesScreen> {
           const SizedBox(height: 60),
           const Icon(LucideIcons.wifiOff, color: AppColors.textMuted, size: 48),
           const SizedBox(height: 16),
-          Text(_error!, style: const TextStyle(color: AppColors.textSecondary, fontFamily: 'Poppins')),
+          Text(_error!,
+              style: const TextStyle(
+                  color: AppColors.textSecondary, fontFamily: 'Poppins')),
           const SizedBox(height: 24),
           ElevatedButton.icon(
             onPressed: _loadCommunities,
@@ -158,7 +218,8 @@ class _CommunitiesScreenState extends State<CommunitiesScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primaryGreen,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16)),
             ),
           ),
         ],
@@ -172,8 +233,12 @@ class _FilterChip extends StatelessWidget {
   final IconData icon;
   final bool selected;
   final VoidCallback onTap;
-  
-  const _FilterChip({required this.label, required this.icon, required this.selected, required this.onTap});
+
+  const _FilterChip(
+      {required this.label,
+      required this.icon,
+      required this.selected,
+      required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -185,22 +250,42 @@ class _FilterChip extends StatelessWidget {
         margin: const EdgeInsets.only(right: 10),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: selected ? (Theme.of(context).brightness == Brightness.dark ? AppColors.primaryGreenMint : const Color(0xFF1A4D2E)) : Theme.of(context).cardColor,
+          color: selected
+              ? (Theme.of(context).brightness == Brightness.dark
+                  ? AppColors.primaryGreenMint
+                  : const Color(0xFF1A4D2E))
+              : Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(20),
-          boxShadow: selected ? [BoxShadow(color: const Color(0xFF1A4D2E).withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4))] : [],
-          border: Border.all(color: selected ? Colors.transparent : const Color(0xFFE0E0E0)),
+          boxShadow: selected
+              ? [
+                  BoxShadow(
+                      color: const Color(0xFF1A4D2E).withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4))
+                ]
+              : [],
+          border: Border.all(
+              color: selected ? Colors.transparent : const Color(0xFFE0E0E0)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 14, color: selected ? Colors.white : (Theme.of(context).textTheme.titleLarge?.color ?? const Color(0xFF1A4D2E))),
+            Icon(icon,
+                size: 14,
+                color: selected
+                    ? Colors.white
+                    : (Theme.of(context).textTheme.titleLarge?.color ??
+                        const Color(0xFF1A4D2E))),
             const SizedBox(width: 8),
             Text(
               label,
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                color: selected ? Colors.white : (Theme.of(context).textTheme.titleLarge?.color ?? const Color(0xFF1A4D2E)),
+                color: selected
+                    ? Colors.white
+                    : (Theme.of(context).textTheme.titleLarge?.color ??
+                        const Color(0xFF1A4D2E)),
                 fontFamily: 'Poppins',
               ),
             ),
@@ -215,7 +300,8 @@ class _CommunityCard extends StatelessWidget {
   final Map<String, dynamic> community;
   final VoidCallback onTap;
   final VoidCallback onJoin;
-  const _CommunityCard({required this.community, required this.onTap, required this.onJoin});
+  const _CommunityCard(
+      {required this.community, required this.onTap, required this.onJoin});
 
   @override
   Widget build(BuildContext context) {
@@ -232,7 +318,10 @@ class _CommunityCard extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 20, offset: const Offset(0, 8)),
+            BoxShadow(
+                color: Colors.black.withOpacity(0.08),
+                blurRadius: 20,
+                offset: const Offset(0, 8)),
           ],
         ),
         child: ClipRRect(
@@ -244,22 +333,28 @@ class _CommunityCard extends StatelessWidget {
               CachedNetworkImage(
                 imageUrl: bgUrl,
                 fit: BoxFit.cover,
-                placeholder: (context, url) => Container(color: const Color(0xFFE8F0EA)),
-                errorWidget: (context, url, error) => Container(color: const Color(0xFFE8F0EA)),
+                placeholder: (context, url) =>
+                    Container(color: const Color(0xFFE8F0EA)),
+                errorWidget: (context, url, error) =>
+                    Container(color: const Color(0xFFE8F0EA)),
               ),
-              
+
               // Dark Gradient Overlay for text readability
               Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [Colors.black.withOpacity(0.7), Colors.transparent, Colors.black.withOpacity(0.6)],
+                    colors: [
+                      Colors.black.withOpacity(0.7),
+                      Colors.transparent,
+                      Colors.black.withOpacity(0.6)
+                    ],
                     begin: Alignment.bottomCenter,
                     end: Alignment.topCenter,
                     stops: const [0.0, 0.5, 1.0],
                   ),
                 ),
               ),
-              
+
               // Content
               Padding(
                 padding: const EdgeInsets.all(20),
@@ -275,20 +370,27 @@ class _CommunityCard extends StatelessWidget {
                         child: BackdropFilter(
                           filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
                               color: Colors.white.withOpacity(0.2),
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.white.withOpacity(0.3)),
+                              border: Border.all(
+                                  color: Colors.white.withOpacity(0.3)),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(_getIconForCategory(category), color: Colors.white, size: 12),
+                                Icon(_getIconForCategory(category),
+                                    color: Colors.white, size: 12),
                                 const SizedBox(width: 6),
                                 Text(
                                   category,
-                                  style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w700, fontFamily: 'Poppins'),
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w700,
+                                      fontFamily: 'Poppins'),
                                 ),
                               ],
                             ),
@@ -296,7 +398,7 @@ class _CommunityCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                    
+
                     // Bottom: Title & Member Count
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -320,7 +422,8 @@ class _CommunityCard extends StatelessWidget {
                           children: [
                             Row(
                               children: [
-                                const Icon(LucideIcons.users, color: Colors.white70, size: 14),
+                                const Icon(LucideIcons.users,
+                                    color: Colors.white70, size: 14),
                                 const SizedBox(width: 6),
                                 Text(
                                   '$memberCount Anggota Resmi', // Authentic member count
@@ -336,15 +439,27 @@ class _CommunityCard extends StatelessWidget {
                             GestureDetector(
                               onTap: onJoin,
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 8),
                                 decoration: BoxDecoration(
-                                  color: community['is_joined'] == true ? Colors.transparent : AppColors.primaryGreen,
-                                  border: community['is_joined'] == true ? Border.all(color: Colors.white.withOpacity(0.5)) : null,
+                                  color: community['is_joined'] == true
+                                      ? Colors.transparent
+                                      : AppColors.primaryGreen,
+                                  border: community['is_joined'] == true
+                                      ? Border.all(
+                                          color: Colors.white.withOpacity(0.5))
+                                      : null,
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Text(
-                                  community['is_joined'] == true ? 'Tergabung' : 'Gabung',
-                                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 12, fontFamily: 'Poppins'),
+                                  community['is_joined'] == true
+                                      ? 'Tergabung'
+                                      : 'Gabung',
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 12,
+                                      fontFamily: 'Poppins'),
                                 ),
                               ),
                             ),
@@ -367,21 +482,40 @@ class _EmptyView extends StatelessWidget {
   const _EmptyView();
   @override
   Widget build(BuildContext context) => Center(
-    child: Column(
-      children: [
-        const SizedBox(height: 80),
-        Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(color: (Theme.of(context).textTheme.titleLarge?.color ?? const Color(0xFF1A4D2E)).withOpacity(0.06), shape: BoxShape.circle),
-          child: Icon(LucideIcons.leaf, size: 48, color: Theme.of(context).textTheme.titleLarge?.color ?? const Color(0xFF1A4D2E)),
-        ).animate().fade().scale(),
-        const SizedBox(height: 24),
-        Text('Belum ada komunitas', style: TextStyle(color: Theme.of(context).textTheme.titleLarge?.color ?? const Color(0xFF1A4D2E), fontSize: 16, fontWeight: FontWeight.w700, fontFamily: 'Poppins')),
-        const SizedBox(height: 8),
-        const Text('Jadilah yang pertama untuk bergabung\natau membuat komunitas baru!', textAlign: TextAlign.center, style: TextStyle(color: AppColors.textSecondary, fontFamily: 'Poppins', fontSize: 13)),
-      ],
-    ),
-  );
+        child: Column(
+          children: [
+            const SizedBox(height: 80),
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                  color: (Theme.of(context).textTheme.titleLarge?.color ??
+                          const Color(0xFF1A4D2E))
+                      .withOpacity(0.06),
+                  shape: BoxShape.circle),
+              child: Icon(LucideIcons.leaf,
+                  size: 48,
+                  color: Theme.of(context).textTheme.titleLarge?.color ??
+                      const Color(0xFF1A4D2E)),
+            ).animate().fade().scale(),
+            const SizedBox(height: 24),
+            Text('Belum ada komunitas',
+                style: TextStyle(
+                    color: Theme.of(context).textTheme.titleLarge?.color ??
+                        const Color(0xFF1A4D2E),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    fontFamily: 'Poppins')),
+            const SizedBox(height: 8),
+            const Text(
+                'Jadilah yang pertama untuk bergabung\natau membuat komunitas baru!',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontFamily: 'Poppins',
+                    fontSize: 13)),
+          ],
+        ),
+      );
 }
 
 // Helper methods for Premium Design Assets
@@ -399,11 +533,17 @@ IconData _getIconForCategory(String category) {
 
 String _getNetworkImageForCategory(String category) {
   const map = {
-    'Diet Vegan': 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=1080&auto=format&fit=crop', // Salad/Fresh food
-    'Hemat Energi': 'https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?q=80&w=1080&auto=format&fit=crop', // Lightbulbs/Energy
-    'Transportasi Hijau': 'https://images.unsplash.com/photo-1485965120184-e220f721d03e?q=80&w=1080&auto=format&fit=crop', // Explicit Bicycle Image
-    'Kelola Sampah': 'https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?q=80&w=1080&auto=format&fit=crop', // Recycling/Nature
-    'Hemat Air': 'https://images.unsplash.com/photo-1437622368342-7a3d73a34c8f?q=80&w=1080&auto=format&fit=crop', // Clean water/river
+    'Diet Vegan':
+        'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=1080&auto=format&fit=crop', // Salad/Fresh food
+    'Hemat Energi':
+        'https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?q=80&w=1080&auto=format&fit=crop', // Lightbulbs/Energy
+    'Transportasi Hijau':
+        'https://images.unsplash.com/photo-1485965120184-e220f721d03e?q=80&w=1080&auto=format&fit=crop', // Explicit Bicycle Image
+    'Kelola Sampah':
+        'https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?q=80&w=1080&auto=format&fit=crop', // Recycling/Nature
+    'Hemat Air':
+        'https://images.unsplash.com/photo-1437622368342-7a3d73a34c8f?q=80&w=1080&auto=format&fit=crop', // Clean water/river
   };
-  return map[category] ?? 'https://images.unsplash.com/photo-1448375240586-882707db888b?q=80&w=1080&auto=format&fit=crop'; // Default forest
+  return map[category] ??
+      'https://images.unsplash.com/photo-1448375240586-882707db888b?q=80&w=1080&auto=format&fit=crop'; // Default forest
 }

@@ -597,7 +597,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildJoinedCommunities() {
-    final joined = _profile?['joined_communities'] as List<dynamic>? ?? [];
+    final joined = ((_profile?['joined_communities'] as List<dynamic>? ?? [])
+        .where((c) => c is Map && c['is_joined'] == true)
+        .toList());
 
     final isDarkComm = Theme.of(context).brightness == Brightness.dark;
     if (joined.isEmpty) {

@@ -47,7 +47,7 @@ func GetProfile(c *fiber.Ctx) error {
 	var joinedCommunities []models.Community
 	config.DB.Table("communities").
 		Joins("JOIN community_members ON community_members.community_id = communities.id").
-		Where("community_members.user_id = ?", userID).
+		Where("community_members.user_id = ? AND community_members.deleted_at IS NULL", userID).
 		Find(&joinedCommunities)
 
 	var joinedCommResponse []fiber.Map
@@ -56,7 +56,7 @@ func GetProfile(c *fiber.Ctx) error {
 		for _, c := range joinedCommunities {
 			commIDs = append(commIDs, c.ID)
 		}
-		
+
 		type MemberCount struct {
 			CommunityID uint
 			Count       int
@@ -95,35 +95,35 @@ func GetProfile(c *fiber.Ctx) error {
 	var combinedActivity []fiber.Map
 	for _, l := range recentLogs {
 		combinedActivity = append(combinedActivity, fiber.Map{
-			"id": l.ID,
-			"title": l.Action.Title,
-			"category": l.Action.Category,
+			"id":            l.ID,
+			"title":         l.Action.Title,
+			"category":      l.Action.Category,
 			"points_earned": l.PointsEarned,
-			"created_at": l.CreatedAt,
+			"created_at":    l.CreatedAt,
 		})
 	}
 	for _, t := range recentTasks {
 		combinedActivity = append(combinedActivity, fiber.Map{
-			"id": t.ID,
-			"title": t.Task.Title,
-			"category": t.Task.Category,
+			"id":            t.ID,
+			"title":         t.Task.Title,
+			"category":      t.Task.Category,
 			"points_earned": t.Task.ImpactPoints,
-			"created_at": t.UpdatedAt,
+			"created_at":    t.UpdatedAt,
 		})
 	}
 
 	// Sort manually in Go (we need to import sort)
-	// Actually to avoid import issues, we can just return combinedActivity as is (max 10 items) and frontend will sort, 
+	// Actually to avoid import issues, we can just return combinedActivity as is (max 10 items) and frontend will sort,
 	// but let's just return it sorted. Wait, I didn't import "sort".
 	// Let's just return combinedActivity and let frontend handle sorting or just take the first 5.
 	// Actually, the frontend reverses it. Let's return it as is.
-	
+
 	// Generate weekly impact array (last 7 days points)
 	weeklyImpact := make([]float64, 7)
 	now := time.Now()
 	sevenDaysAgo := now.AddDate(0, 0, -6)
 	startOfSevenDaysAgo := time.Date(sevenDaysAgo.Year(), sevenDaysAgo.Month(), sevenDaysAgo.Day(), 0, 0, 0, 0, now.Location())
-	
+
 	var weekLogs []models.UserActionLog
 	config.DB.Where("user_id = ? AND created_at >= ?", userID, startOfSevenDaysAgo).Find(&weekLogs)
 
@@ -255,16 +255,16 @@ func GetRiwayat(c *fiber.Ctx) error {
 	var riwayat []fiber.Map
 	for _, l := range logs {
 		riwayat = append(riwayat, fiber.Map{
-			"id":           l.ID,
-			"title":        l.Action.Title,
-			"category":     l.Action.Category,
-			"is_premium":   l.Action.IsPremium,
-			"input_value":  l.InputValue,
-			"unit":         l.Action.Unit,
+			"id":            l.ID,
+			"title":         l.Action.Title,
+			"category":      l.Action.Category,
+			"is_premium":    l.Action.IsPremium,
+			"input_value":   l.InputValue,
+			"unit":          l.Action.Unit,
 			"points_earned": l.PointsEarned,
-			"carbon_saved": l.CarbonSaved,
-			"notes":        l.Notes,
-			"created_at":   l.CreatedAt,
+			"carbon_saved":  l.CarbonSaved,
+			"notes":         l.Notes,
+			"created_at":    l.CreatedAt,
 		})
 	}
 

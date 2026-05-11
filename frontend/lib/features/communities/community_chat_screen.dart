@@ -51,7 +51,15 @@ class _CommunityChatScreenState extends State<CommunityChatScreen> {
         _isJoined = joined.any((c) => c['id'] == widget.communityId);
       }
     } catch (_) {}
-    await _loadMessages();
+
+    if (_isJoined) {
+      await _loadMessages();
+    } else if (mounted) {
+      setState(() {
+        _loading = false;
+        _messages = [];
+      });
+    }
   }
 
   Future<void> _toggleJoin() async {
@@ -61,18 +69,43 @@ class _CommunityChatScreenState extends State<CommunityChatScreen> {
       if (mounted) {
         setState(() {
           _isJoined = res['is_joined'];
+          if (!_isJoined) _messages = [];
         });
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res['pesan'], style: const TextStyle(fontFamily: 'Poppins', color: Colors.white)), backgroundColor: const Color(0xFF1A4D2E), behavior: SnackBarBehavior.floating));
+        if (_isJoined) await _loadMessages();
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(res['pesan'],
+                style: const TextStyle(
+                    fontFamily: 'Poppins', color: Colors.white)),
+            backgroundColor: const Color(0xFF1A4D2E),
+            behavior: SnackBarBehavior.floating));
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString(), style: const TextStyle(fontFamily: 'Poppins', color: Colors.white)), backgroundColor: Colors.redAccent, behavior: SnackBarBehavior.floating));
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(e.toString(),
+                style: const TextStyle(
+                    fontFamily: 'Poppins', color: Colors.white)),
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating));
     } finally {
       if (mounted) setState(() => _sending = false);
     }
   }
 
   Future<void> _loadMessages() async {
-    setState(() { _loading = true; _hasError = false; });
+    if (!_isJoined) {
+      setState(() {
+        _loading = false;
+        _messages = [];
+        _hasError = false;
+      });
+      return;
+    }
+
+    setState(() {
+      _loading = true;
+      _hasError = false;
+    });
     try {
       final msgs = await ApiService.getCommunityMessages(widget.communityId);
       if (mounted) {
@@ -83,17 +116,29 @@ class _CommunityChatScreenState extends State<CommunityChatScreen> {
         _scrollToBottom();
       }
     } on ApiException catch (e) {
-      if (mounted) setState(() {
-        _loading = false;
-        _hasError = true;
-        _errorMsg = e.message;
-      });
+      if (e.statusCode == 403) {
+        if (mounted)
+          setState(() {
+            _loading = false;
+            _hasError = false;
+            _isJoined = false;
+            _messages = [];
+          });
+        return;
+      }
+      if (mounted)
+        setState(() {
+          _loading = false;
+          _hasError = true;
+          _errorMsg = e.message;
+        });
     } catch (e) {
-      if (mounted) setState(() {
-        _loading = false;
-        _hasError = true;
-        _errorMsg = 'Gagal memuat pesan. Cek koneksi.';
-      });
+      if (mounted)
+        setState(() {
+          _loading = false;
+          _hasError = true;
+          _errorMsg = 'Gagal memuat pesan. Cek koneksi.';
+        });
     }
   }
 
@@ -107,6 +152,12 @@ class _CommunityChatScreenState extends State<CommunityChatScreen> {
       await _loadMessages();
     } on ApiException catch (e) {
       if (mounted) {
+        if (e.statusCode == 403) {
+          setState(() {
+            _isJoined = false;
+            _messages = [];
+          });
+        }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(e.message), backgroundColor: AppColors.error),
         );
@@ -144,8 +195,8 @@ class _CommunityChatScreenState extends State<CommunityChatScreen> {
     if (u is Map<String, dynamic>) return u;
     // Fallback: use flat fields baked into ChatMessage
     return {
-      'id':    msg['user_id'],
-      'name':  msg['sender_name'] ?? 'Pengguna',
+      'id': msg['user_id'],
+      'name': msg['sender_name'] ?? 'Pengguna',
       'level': 'Pemula',
     };
   }
@@ -188,7 +239,10 @@ class _CommunityChatScreenState extends State<CommunityChatScreen> {
             color: AppColors.primaryGreenSoft,
             child: const Text(
               '💬 Berdiskusi bersama memperkuat komitmen kita pada lingkungan!',
-              style: TextStyle(fontSize: 12, color: AppColors.primaryGreen, fontFamily: 'Poppins'),
+              style: TextStyle(
+                  fontSize: 12,
+                  color: AppColors.primaryGreen,
+                  fontFamily: 'Poppins'),
               textAlign: TextAlign.center,
             ),
           ),
@@ -198,7 +252,8 @@ class _CommunityChatScreenState extends State<CommunityChatScreen> {
             child: Builder(builder: (ctx) {
               if (_loading) {
                 return const Center(
-                  child: CircularProgressIndicator(color: AppColors.primaryGreen),
+                  child:
+                      CircularProgressIndicator(color: AppColors.primaryGreen),
                 );
               }
               if (_hasError) {
@@ -208,14 +263,53 @@ class _CommunityChatScreenState extends State<CommunityChatScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.wifi_off_rounded, color: AppColors.textMuted, size: 48),
+                        const Icon(Icons.wifi_off_rounded,
+                            color: AppColors.textMuted, size: 48),
                         const SizedBox(height: 12),
-                        Text(_errorMsg, style: const TextStyle(color: AppColors.textSecondary, fontFamily: 'Poppins'), textAlign: TextAlign.center),
+                        Text(_errorMsg,
+                            style: const TextStyle(
+                                color: AppColors.textSecondary,
+                                fontFamily: 'Poppins'),
+                            textAlign: TextAlign.center),
                         const SizedBox(height: 16),
                         ElevatedButton(
                           onPressed: _loadMessages,
-                          style: ElevatedButton.styleFrom(minimumSize: const Size(140, 44)),
+                          style: ElevatedButton.styleFrom(
+                              minimumSize: const Size(140, 44)),
                           child: const Text('Coba Lagi'),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+              if (!_isJoined) {
+                return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.lock_outline_rounded,
+                            color: AppColors.textMuted, size: 48),
+                        SizedBox(height: 12),
+                        Text(
+                          'Forum hanya tersedia untuk anggota komunitas.',
+                          style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              fontFamily: 'Poppins',
+                              color: AppColors.textPrimary),
+                          textAlign: TextAlign.center,
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          'Gabung komunitas terlebih dahulu untuk membaca dan mengirim pesan.',
+                          style: TextStyle(
+                              fontSize: 13,
+                              color: AppColors.textSecondary,
+                              fontFamily: 'Poppins'),
+                          textAlign: TextAlign.center,
                         ),
                       ],
                     ),
@@ -229,9 +323,18 @@ class _CommunityChatScreenState extends State<CommunityChatScreen> {
                     children: [
                       Text('💬', style: TextStyle(fontSize: 48)),
                       SizedBox(height: 12),
-                      Text('Belum ada pesan.', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, fontFamily: 'Poppins', color: AppColors.textPrimary)),
+                      Text('Belum ada pesan.',
+                          style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              fontFamily: 'Poppins',
+                              color: AppColors.textPrimary)),
                       SizedBox(height: 4),
-                      Text('Jadilah yang pertama berdiskusi!', style: TextStyle(fontSize: 13, color: AppColors.textSecondary, fontFamily: 'Poppins')),
+                      Text('Jadilah yang pertama berdiskusi!',
+                          style: TextStyle(
+                              fontSize: 13,
+                              color: AppColors.textSecondary,
+                              fontFamily: 'Poppins')),
                     ],
                   ),
                 );
@@ -287,10 +390,15 @@ class _CommunityChatScreenState extends State<CommunityChatScreen> {
                           ),
                           decoration: InputDecoration(
                             hintText: 'Tulis pesan...',
-                            hintStyle: const TextStyle(color: AppColors.textMuted, fontFamily: 'Poppins', fontSize: 14),
+                            hintStyle: const TextStyle(
+                                color: AppColors.textMuted,
+                                fontFamily: 'Poppins',
+                                fontSize: 14),
                             filled: true,
-                            fillColor: Theme.of(context).scaffoldBackgroundColor,
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                            fillColor:
+                                Theme.of(context).scaffoldBackgroundColor,
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 10),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(24),
                               borderSide: BorderSide.none,
@@ -306,11 +414,15 @@ class _CommunityChatScreenState extends State<CommunityChatScreen> {
                           width: 44,
                           height: 44,
                           decoration: BoxDecoration(
-                            color: _sending ? AppColors.textMuted : AppColors.primaryGreen,
+                            color: _sending
+                                ? AppColors.textMuted
+                                : AppColors.primaryGreen,
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
-                            _sending ? Icons.hourglass_empty_rounded : Icons.send_rounded,
+                            _sending
+                                ? Icons.hourglass_empty_rounded
+                                : Icons.send_rounded,
                             color: Colors.white,
                             size: 20,
                           ),
@@ -324,7 +436,10 @@ class _CommunityChatScreenState extends State<CommunityChatScreen> {
                   decoration: BoxDecoration(
                     color: Theme.of(context).cardColor,
                     boxShadow: [
-                      BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 16, offset: const Offset(0, -4)),
+                      BoxShadow(
+                          color: Colors.black.withOpacity(0.04),
+                          blurRadius: 16,
+                          offset: const Offset(0, -4)),
                     ],
                   ),
                   child: ElevatedButton(
@@ -333,12 +448,21 @@ class _CommunityChatScreenState extends State<CommunityChatScreen> {
                       backgroundColor: AppColors.primaryGreen,
                       foregroundColor: Colors.white,
                       minimumSize: const Size(double.infinity, 54),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16)),
                       elevation: 0,
                     ),
                     child: _sending
-                        ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                        : const Text('Gabung Komunitas untuk Diskusi', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700, fontSize: 15)),
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                                color: Colors.white, strokeWidth: 2))
+                        : const Text('Gabung Komunitas untuk Diskusi',
+                            style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontWeight: FontWeight.w700,
+                                fontSize: 15)),
                   ),
                 ),
         ],
@@ -373,7 +497,8 @@ class _ChatBubble extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Row(
-        mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment:
+            isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!isMe) ...[
@@ -387,29 +512,33 @@ class _ChatBubble extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: const Color(0xFFF0F5F1),
                   shape: BoxShape.circle,
-                  image: userAvatar.isNotEmpty 
-                      ? DecorationImage(image: CachedNetworkImageProvider(userAvatar), fit: BoxFit.cover) 
+                  image: userAvatar.isNotEmpty
+                      ? DecorationImage(
+                          image: CachedNetworkImageProvider(userAvatar),
+                          fit: BoxFit.cover)
                       : null,
                 ),
-                child: userAvatar.isEmpty ? Center(
-                  child: Text(
-                    initial,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF1A4D2E),
-                      fontFamily: 'Poppins',
-                    ),
-                  ),
-                ) : null,
+                child: userAvatar.isEmpty
+                    ? Center(
+                        child: Text(
+                          initial,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF1A4D2E),
+                            fontFamily: 'Poppins',
+                          ),
+                        ),
+                      )
+                    : null,
               ),
             ),
             const SizedBox(width: 10),
           ],
-
           Flexible(
             child: Column(
-              crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+              crossAxisAlignment:
+                  isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
               children: [
                 // Sender info (only for others)
                 if (!isMe)
@@ -432,7 +561,8 @@ class _ChatBubble extends StatelessWidget {
                         ),
                         const SizedBox(width: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
                             color: const Color(0xFFE8F3EB),
                             borderRadius: BorderRadius.circular(10),
@@ -456,9 +586,12 @@ class _ChatBubble extends StatelessWidget {
                   constraints: BoxConstraints(
                     maxWidth: MediaQuery.of(context).size.width * 0.72,
                   ),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
-                    color: isMe ? const Color(0xFF1A4D2E) : Theme.of(context).cardColor,
+                    color: isMe
+                        ? const Color(0xFF1A4D2E)
+                        : Theme.of(context).cardColor,
                     borderRadius: BorderRadius.only(
                       topLeft: const Radius.circular(20),
                       topRight: const Radius.circular(20),
@@ -472,14 +605,20 @@ class _ChatBubble extends StatelessWidget {
                         offset: const Offset(0, 4),
                       ),
                     ],
-                    border: isMe ? null : Border.all(color: const Color(0xFFE8F3EB), width: 1.5),
+                    border: isMe
+                        ? null
+                        : Border.all(
+                            color: const Color(0xFFE8F3EB), width: 1.5),
                   ),
                   child: Text(
                     message,
                     style: TextStyle(
                       fontSize: 14,
                       height: 1.4,
-                      color: isMe ? Colors.white : (Theme.of(context).textTheme.bodyLarge?.color ?? const Color(0xFF1A4D2E)),
+                      color: isMe
+                          ? Colors.white
+                          : (Theme.of(context).textTheme.bodyLarge?.color ??
+                              const Color(0xFF1A4D2E)),
                       fontFamily: 'Poppins',
                       fontWeight: FontWeight.w500,
                     ),
@@ -488,7 +627,6 @@ class _ChatBubble extends StatelessWidget {
               ],
             ),
           ),
-
           if (isMe) const SizedBox(width: 8),
         ],
       ),
