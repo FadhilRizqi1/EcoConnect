@@ -1,4 +1,7 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../core/theme/app_theme.dart';
 import '../../services/api_service.dart';
 import '../../services/auth_service.dart';
@@ -20,6 +23,7 @@ class _CommunityChatScreenState extends State<CommunityChatScreen> {
   bool _loading = true;
   bool _sending = false;
   bool _hasError = false;
+  bool _isJoined = false;
   String _errorMsg = '';
   int? _myId;
   final _msgCtrl = TextEditingController();
@@ -41,8 +45,30 @@ class _CommunityChatScreenState extends State<CommunityChatScreen> {
   Future<void> _init() async {
     try {
       _myId = await AuthService.getUserId();
+      if (_myId != null) {
+        final prof = await ApiService.getProfil(_myId!);
+        final joined = prof['joined_communities'] as List<dynamic>? ?? [];
+        _isJoined = joined.any((c) => c['id'] == widget.communityId);
+      }
     } catch (_) {}
     await _loadMessages();
+  }
+
+  Future<void> _toggleJoin() async {
+    setState(() => _sending = true);
+    try {
+      final res = await ApiService.toggleJoinCommunity(widget.communityId);
+      if (mounted) {
+        setState(() {
+          _isJoined = res['is_joined'];
+        });
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res['pesan'], style: const TextStyle(fontFamily: 'Poppins', color: Colors.white)), backgroundColor: const Color(0xFF1A4D2E), behavior: SnackBarBehavior.floating));
+      }
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString(), style: const TextStyle(fontFamily: 'Poppins', color: Colors.white)), backgroundColor: Colors.redAccent, behavior: SnackBarBehavior.floating));
+    } finally {
+      if (mounted) setState(() => _sending = false);
+    }
   }
 
   Future<void> _loadMessages() async {
@@ -141,6 +167,10 @@ class _CommunityChatScreenState extends State<CommunityChatScreen> {
       backgroundColor: AppColors.backgroundLight,
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          onPressed: () => context.go('/komunitas'),
+        ),
         title: const Text('Forum Diskusi'),
         actions: [
           IconButton(
@@ -220,6 +250,8 @@ class _CommunityChatScreenState extends State<CommunityChatScreen> {
                     message: msg['message']?.toString() ?? '',
                     userName: user['name']?.toString() ?? 'Pengguna',
                     userLevel: user['level']?.toString() ?? 'Pemula',
+                    userAvatar: user['avatar']?.toString() ?? '',
+                    userId: _safeInt(user['id']) ?? 0,
                     isMe: isMe,
                   );
                 },
@@ -227,65 +259,88 @@ class _CommunityChatScreenState extends State<CommunityChatScreen> {
             }),
           ),
 
-          // ── Input bar ──
-          Container(
-            padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.06),
-                  blurRadius: 8,
-                  offset: const Offset(0, -3),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _msgCtrl,
-                    textInputAction: TextInputAction.send,
-                    onSubmitted: (_) => _sendMessage(),
-                    style: const TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 14,
-                      color: Colors.black87,
-                    ),
-                    decoration: InputDecoration(
-                      hintText: 'Tulis pesan...',
-                      hintStyle: const TextStyle(color: AppColors.textMuted, fontFamily: 'Poppins', fontSize: 14),
-                      filled: true,
-                      fillColor: AppColors.backgroundLight,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(24),
-                        borderSide: BorderSide.none,
+          // ── Input bar / Join Button ──
+          _isJoined
+              ? Container(
+                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.04),
+                        blurRadius: 16,
+                        offset: const Offset(0, -4),
                       ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _msgCtrl,
+                          textInputAction: TextInputAction.send,
+                          onSubmitted: (_) => _sendMessage(),
+                          style: const TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 14,
+                            color: Colors.black87,
+                          ),
+                          decoration: InputDecoration(
+                            hintText: 'Tulis pesan...',
+                            hintStyle: const TextStyle(color: AppColors.textMuted, fontFamily: 'Poppins', fontSize: 14),
+                            filled: true,
+                            fillColor: const Color(0xFFF5F7F5),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(24),
+                              borderSide: BorderSide.none,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      GestureDetector(
+                        onTap: _sendMessage,
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: _sending ? AppColors.textMuted : AppColors.primaryGreen,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            _sending ? Icons.hourglass_empty_rounded : Icons.send_rounded,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              : Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 16, offset: const Offset(0, -4)),
+                    ],
+                  ),
+                  child: ElevatedButton(
+                    onPressed: _toggleJoin,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primaryGreen,
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size(double.infinity, 54),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      elevation: 0,
                     ),
+                    child: _sending
+                        ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                        : const Text('Gabung Komunitas untuk Diskusi', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700, fontSize: 15)),
                   ),
                 ),
-                const SizedBox(width: 10),
-                GestureDetector(
-                  onTap: _sendMessage,
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: _sending ? AppColors.textMuted : AppColors.primaryGreen,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      _sending ? Icons.hourglass_empty_rounded : Icons.send_rounded,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
         ],
       ),
     );
@@ -298,12 +353,16 @@ class _ChatBubble extends StatelessWidget {
   final String message;
   final String userName;
   final String userLevel;
+  final String userAvatar;
+  final int userId;
   final bool isMe;
 
   const _ChatBubble({
     required this.message,
     required this.userName,
     required this.userLevel,
+    required this.userAvatar,
+    required this.userId,
     required this.isMe,
   });
 
@@ -312,25 +371,40 @@ class _ChatBubble extends StatelessWidget {
     final initial = userName.isNotEmpty ? userName[0].toUpperCase() : '?';
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.only(bottom: 16),
       child: Row(
         mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!isMe) ...[
-            CircleAvatar(
-              radius: 16,
-              backgroundColor: AppColors.primaryGreenSoft,
-              child: Text(
-                initial,
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primaryGreen,
+            GestureDetector(
+              onTap: () {
+                if (userId > 0) context.push('/profil/$userId');
+              },
+              child: Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF0F5F1),
+                  shape: BoxShape.circle,
+                  image: userAvatar.isNotEmpty 
+                      ? DecorationImage(image: CachedNetworkImageProvider(userAvatar), fit: BoxFit.cover) 
+                      : null,
                 ),
+                child: userAvatar.isEmpty ? Center(
+                  child: Text(
+                    initial,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF1A4D2E),
+                      fontFamily: 'Poppins',
+                    ),
+                  ),
+                ) : null,
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 10),
           ],
 
           Flexible(
@@ -340,7 +414,7 @@ class _ChatBubble extends StatelessWidget {
                 // Sender info (only for others)
                 if (!isMe)
                   Padding(
-                    padding: const EdgeInsets.only(left: 4, bottom: 4),
+                    padding: const EdgeInsets.only(left: 4, bottom: 6),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -348,27 +422,27 @@ class _ChatBubble extends StatelessWidget {
                           child: Text(
                             userName,
                             style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
                               color: AppColors.textSecondary,
                               fontFamily: 'Poppins',
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        const SizedBox(width: 6),
+                        const SizedBox(width: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
-                            color: AppColors.accentAmberSoft,
-                            borderRadius: BorderRadius.circular(8),
+                            color: const Color(0xFFE8F3EB),
+                            borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(
                             userLevel,
                             style: const TextStyle(
                               fontSize: 9,
-                              color: AppColors.accentAmber,
-                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF1A4D2E),
+                              fontWeight: FontWeight.w800,
                               fontFamily: 'Poppins',
                             ),
                           ),
@@ -380,31 +454,34 @@ class _ChatBubble extends StatelessWidget {
                 // Bubble
                 Container(
                   constraints: BoxConstraints(
-                    maxWidth: MediaQuery.of(context).size.width * 0.68,
+                    maxWidth: MediaQuery.of(context).size.width * 0.72,
                   ),
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
-                    color: isMe ? AppColors.primaryGreen : Colors.white,
+                    color: isMe ? const Color(0xFF1A4D2E) : Colors.white,
                     borderRadius: BorderRadius.only(
-                      topLeft: const Radius.circular(18),
-                      topRight: const Radius.circular(18),
-                      bottomLeft: Radius.circular(isMe ? 18 : 4),
-                      bottomRight: Radius.circular(isMe ? 4 : 18),
+                      topLeft: const Radius.circular(20),
+                      topRight: const Radius.circular(20),
+                      bottomLeft: Radius.circular(isMe ? 20 : 6),
+                      bottomRight: Radius.circular(isMe ? 6 : 20),
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 5,
-                        offset: const Offset(0, 2),
+                        color: Colors.black.withOpacity(0.04),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
                       ),
                     ],
+                    border: isMe ? null : Border.all(color: const Color(0xFFE8F3EB), width: 1.5),
                   ),
                   child: Text(
                     message,
                     style: TextStyle(
                       fontSize: 14,
-                      color: isMe ? Colors.white : AppColors.textPrimary,
+                      height: 1.4,
+                      color: isMe ? Colors.white : const Color(0xFF1A4D2E),
                       fontFamily: 'Poppins',
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ),

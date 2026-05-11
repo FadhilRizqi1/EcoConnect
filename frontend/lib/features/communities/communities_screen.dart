@@ -1,10 +1,14 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons/lucide_icons.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/constants/app_constants.dart';
 import '../../services/api_service.dart';
 
-/// Layar daftar komunitas — mengambil data dari /api/communities
+/// Komunitas Hijau — Premium Network Imagery & Authentic Social Experience
 class CommunitiesScreen extends StatefulWidget {
   const CommunitiesScreen({super.key});
 
@@ -41,42 +45,67 @@ class _CommunitiesScreenState extends State<CommunitiesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
-      appBar: AppBar(title: const Text('Komunitas Hijau')),
-      body: Column(
-        children: [
-          // Filter kategori (Hick's Law)
-          SizedBox(
-            height: 56,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              children: [
-                _FilterChip(label: 'Semua', selected: _selectedCategory.isEmpty, onTap: () => _setCategory('')),
-                ...AppConstants.kategoriOnboarding.map((k) =>
-                  _FilterChip(label: '${k['emoji']} ${k['nama']}', selected: _selectedCategory == k['nama'], onTap: () => _setCategory(k['nama']!)),
+      backgroundColor: const Color(0xFFF4F7F5),
+      body: CustomScrollView(
+        slivers: [
+          // Premium App Bar
+          SliverAppBar(
+            expandedHeight: 100,
+            floating: true,
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            title: const Text(
+              'Komunitas Hijau',
+              style: TextStyle(color: Color(0xFF1A4D2E), fontWeight: FontWeight.w800, fontFamily: 'Poppins'),
+            ).animate().fade().slideY(begin: -0.2),
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(60),
+              child: SizedBox(
+                height: 60,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  children: [
+                    _FilterChip(
+                      label: 'Semua', 
+                      icon: LucideIcons.layers, 
+                      selected: _selectedCategory.isEmpty, 
+                      onTap: () => _setCategory('')
+                    ),
+                    ...AppConstants.kategoriOnboarding.map((k) {
+                      final catName = k['nama']!;
+                      return _FilterChip(
+                        label: catName, 
+                        icon: _getIconForCategory(catName), 
+                        selected: _selectedCategory == catName, 
+                        onTap: () => _setCategory(catName)
+                      );
+                    }),
+                  ],
                 ),
-              ],
+              ).animate().fade(delay: const Duration(milliseconds: 200)).slideX(),
             ),
           ),
 
-          // Isi
-          Expanded(
+          // Content List
+          SliverToBoxAdapter(
             child: _loading
-                ? const Center(child: CircularProgressIndicator(color: AppColors.primaryGreen))
+                ? const SizedBox(height: 300, child: Center(child: CircularProgressIndicator(color: AppColors.primaryGreen)))
                 : _error != null
-                    ? _ErrorView(message: _error!, onRetry: _loadCommunities)
+                    ? _buildError()
                     : _communities.isEmpty
                         ? const _EmptyView()
-                        : RefreshIndicator(
-                            onRefresh: _loadCommunities,
-                            child: ListView.builder(
-                              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                              itemCount: _communities.length,
-                              itemBuilder: (_, i) => _CommunityCard(
-                                community: _communities[i],
-                                onTap: () => context.go('/komunitas/${_communities[i]['id']}'),
-                              ),
+                        : Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+                            child: Column(
+                              children: _communities.asMap().entries.map((e) {
+                                final delay = e.key * 100;
+                                return _CommunityCard(
+                                  community: e.value,
+                                  onTap: () => context.go('/komunitas/${e.value['id']}'),
+                                  onJoin: () => _toggleJoin(e.value['id']),
+                                ).animate().fade(delay: Duration(milliseconds: delay)).slideY(begin: 0.1);
+                              }).toList(),
                             ),
                           ),
           ),
@@ -89,35 +118,93 @@ class _CommunitiesScreenState extends State<CommunitiesScreen> {
     setState(() => _selectedCategory = cat);
     _loadCommunities();
   }
+
+  Future<void> _toggleJoin(int id) async {
+    try {
+      final res = await ApiService.toggleJoinCommunity(id);
+      final isJoined = res['is_joined'];
+      setState(() {
+        final index = _communities.indexWhere((c) => c['id'] == id);
+        if (index != -1) {
+          _communities[index]['is_joined'] = isJoined;
+          if (isJoined) {
+            _communities[index]['member_count'] = (_communities[index]['member_count'] ?? 0) + 1;
+          } else {
+            _communities[index]['member_count'] = (_communities[index]['member_count'] ?? 1) - 1;
+          }
+        }
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res['pesan'], style: const TextStyle(fontFamily: 'Poppins', color: Colors.white)), backgroundColor: const Color(0xFF1A4D2E), behavior: SnackBarBehavior.floating));
+      }
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString(), style: const TextStyle(fontFamily: 'Poppins', color: Colors.white)), backgroundColor: Colors.redAccent, behavior: SnackBarBehavior.floating));
+    }
+  }
+
+  Widget _buildError() {
+    return Center(
+      child: Column(
+        children: [
+          const SizedBox(height: 60),
+          const Icon(LucideIcons.wifiOff, color: AppColors.textMuted, size: 48),
+          const SizedBox(height: 16),
+          Text(_error!, style: const TextStyle(color: AppColors.textSecondary, fontFamily: 'Poppins')),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: _loadCommunities,
+            icon: const Icon(LucideIcons.refreshCw, size: 16),
+            label: const Text('Coba Lagi'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primaryGreen,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _FilterChip extends StatelessWidget {
   final String label;
+  final IconData icon;
   final bool selected;
   final VoidCallback onTap;
-  const _FilterChip({required this.label, required this.selected, required this.onTap});
+  
+  const _FilterChip({required this.label, required this.icon, required this.selected, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        margin: const EdgeInsets.only(right: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+        margin: const EdgeInsets.only(right: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: selected ? AppColors.primaryGreen : Colors.white,
+          color: selected ? const Color(0xFF1A4D2E) : Colors.white,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: selected ? AppColors.primaryGreen : AppColors.textMuted.withOpacity(0.3)),
+          boxShadow: selected ? [BoxShadow(color: const Color(0xFF1A4D2E).withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4))] : [],
+          border: Border.all(color: selected ? Colors.transparent : const Color(0xFFE0E0E0)),
         ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-            color: selected ? Colors.white : AppColors.textPrimary,
-            fontFamily: 'Poppins',
-          ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 14, color: selected ? Colors.white : const Color(0xFF1A4D2E)),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                color: selected ? Colors.white : const Color(0xFF1A4D2E),
+                fontFamily: 'Poppins',
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -127,101 +214,196 @@ class _FilterChip extends StatelessWidget {
 class _CommunityCard extends StatelessWidget {
   final Map<String, dynamic> community;
   final VoidCallback onTap;
-  const _CommunityCard({required this.community, required this.onTap});
+  final VoidCallback onJoin;
+  const _CommunityCard({required this.community, required this.onTap, required this.onJoin});
 
   @override
   Widget build(BuildContext context) {
-    final categoryEmoji = _getEmoji(community['category'] ?? '');
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: AppColors.primaryGreen.withOpacity(0.06), blurRadius: 12, offset: const Offset(0, 4))],
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
+    final String category = community['category'] ?? '';
+    final String bgUrl = _getNetworkImageForCategory(category);
+    // Authentic data: Default to 0 if null, no fake inflations
+    final int memberCount = community['member_count'] ?? 0;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 20),
+        height: 180,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 20, offset: const Offset(0, 8)),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: Stack(
+            fit: StackFit.expand,
             children: [
-              Container(
-                width: 52,
-                height: 52,
-                decoration: BoxDecoration(color: AppColors.primaryGreenSoft, borderRadius: BorderRadius.circular(14)),
-                child: Center(child: Text(categoryEmoji, style: const TextStyle(fontSize: 26))),
+              // Dynamic Premium Network Image
+              CachedNetworkImage(
+                imageUrl: bgUrl,
+                fit: BoxFit.cover,
+                placeholder: (context, url) => Container(color: const Color(0xFFE8F0EA)),
+                errorWidget: (context, url, error) => Container(color: const Color(0xFFE8F0EA)),
               ),
-              const SizedBox(width: 14),
-              Expanded(
+              
+              // Dark Gradient Overlay for text readability
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.black.withOpacity(0.7), Colors.transparent, Colors.black.withOpacity(0.6)],
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                    stops: const [0.0, 0.5, 1.0],
+                  ),
+                ),
+              ),
+              
+              // Content
+              Padding(
+                padding: const EdgeInsets.all(20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(community['name'], style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, fontFamily: 'Poppins', color: AppColors.textPrimary)),
-                    const SizedBox(height: 3),
-                    Text(community['description'] ?? '', style: const TextStyle(fontSize: 12, color: AppColors.textSecondary, fontFamily: 'Poppins'), maxLines: 2, overflow: TextOverflow.ellipsis),
-                    const SizedBox(height: 6),
-                    Row(
+                    // Top: Category Badge
+                    Align(
+                      alignment: Alignment.topRight,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.white.withOpacity(0.3)),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(_getIconForCategory(category), color: Colors.white, size: 12),
+                                const SizedBox(width: 6),
+                                Text(
+                                  category,
+                                  style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w700, fontFamily: 'Poppins'),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    
+                    // Bottom: Title & Member Count
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(Icons.people_outline_rounded, size: 13, color: AppColors.primaryGreenMint),
-                        const SizedBox(width: 4),
-                        Text('${community['member_count']} anggota', style: const TextStyle(fontSize: 11, color: AppColors.primaryGreenMint, fontWeight: FontWeight.w600, fontFamily: 'Poppins')),
+                        Text(
+                          community['name'],
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                            fontFamily: 'Poppins',
+                            height: 1.2,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(LucideIcons.users, color: Colors.white70, size: 14),
+                                const SizedBox(width: 6),
+                                Text(
+                                  '$memberCount Anggota Resmi', // Authentic member count
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.white70,
+                                    fontWeight: FontWeight.w600,
+                                    fontFamily: 'Poppins',
+                                  ),
+                                ),
+                              ],
+                            ),
+                            GestureDetector(
+                              onTap: onJoin,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: community['is_joined'] == true ? Colors.transparent : AppColors.primaryGreen,
+                                  border: community['is_joined'] == true ? Border.all(color: Colors.white.withOpacity(0.5)) : null,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  community['is_joined'] == true ? 'Tergabung' : 'Gabung',
+                                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 12, fontFamily: 'Poppins'),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ],
                     ),
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right_rounded, color: AppColors.textMuted, size: 20),
             ],
           ),
         ),
       ),
     );
   }
-
-  String _getEmoji(String category) {
-    const map = {
-      'Diet Vegan': '🥗',
-      'Hemat Energi': '⚡',
-      'Transportasi Hijau': '🚲',
-      'Kelola Sampah': '♻️',
-      'Hemat Air': '💧',
-    };
-    return map[category] ?? '🌿';
-  }
 }
 
 class _EmptyView extends StatelessWidget {
   const _EmptyView();
   @override
-  Widget build(BuildContext context) => const Center(
+  Widget build(BuildContext context) => Center(
     child: Column(
-      mainAxisSize: MainAxisSize.min,
       children: [
-        Text('🌱', style: TextStyle(fontSize: 48)),
-        SizedBox(height: 12),
-        Text('Belum ada komunitas di kategori ini', style: TextStyle(color: AppColors.textSecondary, fontFamily: 'Poppins')),
+        const SizedBox(height: 80),
+        Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(color: const Color(0xFF1A4D2E).withOpacity(0.06), shape: BoxShape.circle),
+          child: const Icon(LucideIcons.leaf, size: 48, color: Color(0xFF1A4D2E)),
+        ).animate().fade().scale(),
+        const SizedBox(height: 24),
+        const Text('Belum ada komunitas', style: TextStyle(color: Color(0xFF1A4D2E), fontSize: 16, fontWeight: FontWeight.w700, fontFamily: 'Poppins')),
+        const SizedBox(height: 8),
+        const Text('Jadilah yang pertama untuk bergabung\natau membuat komunitas baru!', textAlign: TextAlign.center, style: TextStyle(color: AppColors.textSecondary, fontFamily: 'Poppins', fontSize: 13)),
       ],
     ),
   );
 }
 
-class _ErrorView extends StatelessWidget {
-  final String message;
-  final VoidCallback onRetry;
-  const _ErrorView({required this.message, required this.onRetry});
+// Helper methods for Premium Design Assets
 
-  @override
-  Widget build(BuildContext context) => Center(
-    child: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const Icon(Icons.wifi_off_rounded, color: AppColors.textMuted, size: 48),
-        const SizedBox(height: 12),
-        Text(message, style: const TextStyle(color: AppColors.textSecondary, fontFamily: 'Poppins')),
-        const SizedBox(height: 16),
-        ElevatedButton(onPressed: onRetry, style: ElevatedButton.styleFrom(minimumSize: const Size(140, 44)), child: const Text('Coba Lagi')),
-      ],
-    ),
-  );
+IconData _getIconForCategory(String category) {
+  const map = {
+    'Diet Vegan': LucideIcons.apple,
+    'Hemat Energi': LucideIcons.zap,
+    'Transportasi Hijau': LucideIcons.bike,
+    'Kelola Sampah': LucideIcons.recycle,
+    'Hemat Air': LucideIcons.droplet,
+  };
+  return map[category] ?? LucideIcons.leaf;
+}
+
+String _getNetworkImageForCategory(String category) {
+  const map = {
+    'Diet Vegan': 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=1080&auto=format&fit=crop', // Salad/Fresh food
+    'Hemat Energi': 'https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?q=80&w=1080&auto=format&fit=crop', // Lightbulbs/Energy
+    'Transportasi Hijau': 'https://images.unsplash.com/photo-1519003300449-424ad0405076?q=80&w=1080&auto=format&fit=crop', // Bicycles in nature
+    'Kelola Sampah': 'https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?q=80&w=1080&auto=format&fit=crop', // Recycling/Nature
+    'Hemat Air': 'https://images.unsplash.com/photo-1437622368342-7a3d73a34c8f?q=80&w=1080&auto=format&fit=crop', // Clean water/river
+  };
+  return map[category] ?? 'https://images.unsplash.com/photo-1448375240586-882707db888b?q=80&w=1080&auto=format&fit=crop'; // Default forest
 }
