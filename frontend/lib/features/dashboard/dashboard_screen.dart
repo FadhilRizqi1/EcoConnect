@@ -4,9 +4,11 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/utils/rank_helper.dart';
 import '../../services/api_service.dart';
 import '../../services/auth_service.dart';
 import '../tasks/tasks_screen.dart' show dashboardRefreshNotifier;
+import 'widgets/premium_progress_menu.dart';
 
 /// Beranda — Premium Bento Box Dashboard
 class DashboardScreen extends StatefulWidget {
@@ -31,6 +33,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   void _onCheckinCompleted() {
     if (mounted) _load();
+  }
+
+  void _showPremiumSubMenu(BuildContext context) {
+    if (_profile == null) return;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => PremiumProgressMenu(userProfile: _profile!),
+    );
   }
 
   @override
@@ -100,6 +112,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 style: TextStyle(color: Color(0xFF1A4D2E), fontWeight: FontWeight.w800, fontFamily: 'Poppins'),
               ).animate().fade().slideY(begin: -0.2),
               actions: [
+                Container(
+                  margin: const EdgeInsets.only(right: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
+                  ),
+                  child: IconButton(
+                    icon: const Icon(LucideIcons.barChart2, color: AppColors.accentAmber, size: 20),
+                    tooltip: 'Progres & Peringkat',
+                    onPressed: () => _showPremiumSubMenu(context),
+                  ),
+                ).animate().fade().scale(delay: const Duration(milliseconds: 100)),
                 Container(
                   margin: const EdgeInsets.only(right: 16),
                   decoration: BoxDecoration(
@@ -196,29 +221,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildWelcomeHeader() {
     final profil = _profile?['profil'] as Map<String, dynamic>? ?? {};
     final name = profil['name']?.toString() ?? 'Eco Warrior';
-    final level = profil['level']?.toString() ?? 'Pemula';
+    final level = profil['level']?.toString() ?? 'Tunas';
     final points = (profil['reputation_points'] as num? ?? 0).toInt();
 
-    // Calculate level progress
-    double progress = 0.0;
-    String nextLevel = 'Max';
-    int pointsNeeded = 0;
-    
-    if (points < 100) {
-      progress = points / 100;
-      nextLevel = 'Pejuang Hijau';
-      pointsNeeded = 100 - points;
-    } else if (points < 500) {
-      progress = (points - 100) / 400;
-      nextLevel = 'Penjaga Alam';
-      pointsNeeded = 500 - points;
-    } else if (points < 1000) {
-      progress = (points - 500) / 500;
-      nextLevel = 'Pahlawan Bumi';
-      pointsNeeded = 1000 - points;
-    } else {
-      progress = 1.0;
-    }
+    final rank = RankHelper.getRank(points);
+    final nextRank = RankHelper.getNextRank(points);
+    final progress = RankHelper.getProgress(points);
+    final pointsNeeded = RankHelper.getPointsNeeded(points);
+    final nextLevel = nextRank?.name ?? 'Max';
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -236,11 +246,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 width: 56,
                 height: 56,
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(colors: [Color(0xFF4FC87A), Color(0xFF1A4D2E)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                  gradient: LinearGradient(colors: [rank.color.withOpacity(0.8), rank.color], begin: Alignment.topLeft, end: Alignment.bottomRight),
                   borderRadius: BorderRadius.circular(16),
-                  boxShadow: [BoxShadow(color: const Color(0xFF4FC87A).withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4))],
+                  boxShadow: [BoxShadow(color: rank.color.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4))],
                 ),
-                child: const Center(child: Icon(LucideIcons.leaf, color: Colors.white, size: 28)),
+                child: Center(child: Icon(rank.icon, color: Colors.white, size: 28)),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -251,8 +261,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     const SizedBox(height: 4),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(color: const Color(0xFF1A4D2E).withOpacity(0.08), borderRadius: BorderRadius.circular(8)),
-                      child: Text(level, style: const TextStyle(fontSize: 11, color: Color(0xFF1A4D2E), fontWeight: FontWeight.w600, fontFamily: 'Poppins')),
+                      decoration: BoxDecoration(color: rank.color.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                      child: Text(level, style: TextStyle(fontSize: 11, color: rank.color, fontWeight: FontWeight.w700, fontFamily: 'Poppins')),
                     ),
                   ],
                 ),
