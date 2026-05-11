@@ -120,7 +120,6 @@
 ```
 EcoConnect/
 ├── 📄 .env                          # Environment variables (DB, JWT, etc.)
-├── 📄 INSTRUCTION.md                # Development roadmap
 │
 ├── 🗂️ backend/
 │   ├── main.go                      # Entry point + seeder
