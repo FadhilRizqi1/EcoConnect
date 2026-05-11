@@ -4,6 +4,7 @@ import (
 	"ecoconnect/config"
 	"ecoconnect/models"
 	"strconv"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -117,12 +118,29 @@ func GetProfile(c *fiber.Ctx) error {
 	// Let's just return combinedActivity and let frontend handle sorting or just take the first 5.
 	// Actually, the frontend reverses it. Let's return it as is.
 	
+	// Generate weekly impact array (last 7 days points)
+	weeklyImpact := make([]float64, 7)
+	now := time.Now()
+	sevenDaysAgo := now.AddDate(0, 0, -6)
+	startOfSevenDaysAgo := time.Date(sevenDaysAgo.Year(), sevenDaysAgo.Month(), sevenDaysAgo.Day(), 0, 0, 0, 0, now.Location())
+	
+	var weekLogs []models.UserActionLog
+	config.DB.Where("user_id = ? AND created_at >= ?", userID, startOfSevenDaysAgo).Find(&weekLogs)
+
+	for _, log := range weekLogs {
+		diffDays := int(log.CreatedAt.Sub(startOfSevenDaysAgo).Hours() / 24)
+		if diffDays >= 0 && diffDays < 7 {
+			weeklyImpact[diffDays] += float64(log.PointsEarned)
+		}
+	}
+
 	return c.JSON(fiber.Map{
 		"profil":             user,
 		"tugas_selesai":      totalAksi, // Total Aksi gabungan
 		"total_karbon_kg":    totalCarbon,
 		"joined_communities": joinedCommResponse,
 		"recent_activity":    combinedActivity,
+		"weekly_impact":      weeklyImpact,
 	})
 }
 
