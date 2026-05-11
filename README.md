@@ -9,10 +9,13 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Supabase-336791?style=for-the-badge&logo=postgresql&logoColor=white)](https://supabase.com)
 [![Fiber](https://img.shields.io/badge/Fiber-v2-00ACD7?style=for-the-badge&logo=go&logoColor=white)](https://gofiber.io)
 
-
 <br/>
 
 > _"Together for a better earth."_
+
+<br/>
+
+![EcoConnect Banner](https://img.shields.io/badge/🌍_Carbon_Tracking-✅_Action_Check--in-💬_Community_Chat-1B6B3A?style=flat-square)
 
 </div>
 
@@ -41,10 +44,10 @@
 
 **EcoConnect** is a full-stack application that motivates users to adopt eco-friendly habits through:
 
-- **Gamification** — Reputation points, levels, and badges for every green action completed.
-- **Community** — Real-time discussion forums categorized by environmental focus (vegan, energy saving, etc.).
-- **Carbon Tracking** — Automatically calculates estimated CO₂ saved on the server side.
-- **Leaderboard** — Healthy competition among users with a Top 3 visual podium.
+- **Gamification 2.0** — Reputation points, badges, and a **3D Podium Leaderboard**.
+- **Community Hub** — Real-time forums categorized by environmental focus with auto-joining logic.
+- **Premium Missions** — Specialized high-impact tasks with exclusive UI and rewards.
+- **Impact Tracking** — Detailed history of CO₂ savings and points with rich visual summaries.
 
 ---
 
@@ -52,13 +55,14 @@
 
 | Feature | Description | Status |
 |---------|-------------|--------|
-| 🔐 **Authentication** | Register & Login with JWT | ✅ |
-| 🏠 **Dashboard** | Carbon stats, points, actions + recent activities | ✅ |
-| ✅ **Action Check-in** | Submit green actions with quantity input + server-side calculation | ✅ |
-| 💬 **Community Forum** | Real-time chat per category (GET & POST) | ✅ |
-| 🏆 **Leaderboard** | Top users with visual podium | ✅ |
-| 👤 **Profile** | Personal stats + badge collection | ✅ |
-| 🌱 **Onboarding** | Category focus selection (Hick's Law: max 5) | ✅ |
+| 🔐 **Authentication** | Register & Login with sophisticated **Dark Gradient** theme | ✅ |
+| 🏠 **Dashboard** | Carbon stats, points, actions + recent activities in bento-style | ✅ |
+| 💎 **Premium Missions** | Distinct high-reward missions with **Amber Gradient** and glow effects | ✅ |
+| ✅ **Action Check-in** | Stepper input (+/-), real-time reward estimation, and Lucide icons | ✅ |
+| 📜 **Activity History** | Full log of past actions with carbon/point summaries and notes | ✅ |
+| 💬 **Community Forum** | Real-time chat per category with auto-join upon onboarding | ✅ |
+| 🏆 **Leaderboard** | Top users with **3D Visual Podium** design | ✅ |
+| 🌱 **Onboarding** | Multi-category selection (Hick's Law) with community integration | ✅ |
 
 ---
 
@@ -66,10 +70,10 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    EcoConnect Architecture                  │
+│                    EcoConnect Architecture                   │
 │                                                             │
 │  ┌──────────────┐        ┌──────────────┐                   │
-│  │   Frontend   │  HTTP  │   Backend    │                   │
+│  │   Frontend   │ HTTP   │   Backend    │                   │
 │  │              │◄──────►│              │                   │
 │  │   Flutter    │  JSON  │  Go Fiber    │                   │
 │  │   (Web/App)  │        │   REST API   │                   │
@@ -95,14 +99,15 @@
 ### Frontend
 | Technology | Version | Purpose |
 |------------|---------|---------|
-| **Flutter** | 3.x | UI framework (Web & Mobile) |
+| **Flutter** | 3.x | UI framework (Mobile focus) |
 | **Dart** | 3.x | Programming language |
-| **go_router** | ^14.3 | Declarative routing |
+| **go_router** | ^14.8 | Declarative routing |
 | **http** | ^1.2 | Lightweight HTTP client |
+| **lucide_icons** | latest | Premium iconography |
 | **confetti** | ^0.7 | Confetti animation (Peak-End Rule) |
-| **flutter_animate** | ^4.5 | Micro-animations |
+| **flutter_animate** | ^4.5 | Micro-animations & transitions |
+| **intl** | ^0.19 | Date & number formatting |
 | **shared_preferences** | ^2.3 | Local token storage |
-| **provider** | ^6.1 | State management |
 
 ### Database & Infrastructure
 | Technology | Purpose |
@@ -157,9 +162,9 @@ EcoConnect/
         ├── features/
         │   ├── auth/                    # Login & Register
         │   ├── onboarding/              # Onboarding + category selection
-        │   ├── dashboard/               # Home (stats, missions, activity)
-        │   ├── tasks/                   # Action List + Check-in BottomSheet
-        │   ├── communities/             # Community List + Chat Forum
+        │   ├── dashboard/               # Home (Bento stats, recent missions)
+        │   ├── tasks/                   # Mission List, Check-in & Activity History
+        │   ├── communities/             # Community Hub & Chat Forums
         │   ├── leaderboard/             # Leaderboard
         │   └── profile/                 # User Profile
         ├── services/
@@ -328,6 +333,7 @@ Base URL: `http://localhost:8080/api`
 | `POST` | `/checkin` | Submit green action check-in |
 | `GET` | `/profil/:id` | User profile data |
 | `GET` | `/papan-peringkat` | Top users ranked by points |
+| `GET` | `/riwayat` | Full user activity logs with aggregate stats |
 | `GET` | `/communities` | List communities (filter: `?kategori=`) |
 | `GET` | `/communities/:id/messages` | Community forum messages |
 | `POST` | `/communities/:id/messages` | Send message to forum |
@@ -379,13 +385,13 @@ The EcoConnect design is built upon proven cognitive principles:
 | Principle | Implementation |
 |-----------|----------------|
 | **Hick's Law** | Maximum 5 category choices in onboarding & filters |
-| **Fitts's Law** | CTA buttons are always full-width, minimum 58px height |
-| **Von Restorff Effect** | Premium action cards are colored amber to stand out |
-| **Peak-End Rule** | Confetti animation ✨ after successful check-in |
-| **Tesler's Law** | Point & carbon calculations are done server-side, not by the user |
-| **Jakob's Law** | Bottom navigation with familiar standard icons |
-| **Postel's Law** | Optional note inputs, form accepts flexible number formats |
-| **Group Polarization** | Community forums per category strengthen shared commitment |
+| **Fitts's Law** | Full-width buttons & **Stepper (+/-)** buttons for easy input |
+| **Von Restorff Effect** | **Amber Glow** on premium missions makes them stand out |
+| **Peak-End Rule** | **Confetti animation** ✨ and snacks after success |
+| **Tesler's Law** | Point & carbon calculations are done server-side |
+| **Jakob's Law** | Standard bottom navigation & **Back buttons** in chat/history |
+| **Postel's Law** | Flexible decimal inputs, optional notes, lenient auth flow |
+| **Group Polarization** | Niche community forums strengthen shared green commitment |
 
 ---
 
