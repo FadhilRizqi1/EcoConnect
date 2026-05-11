@@ -164,7 +164,7 @@ class _CommunityChatScreenState extends State<CommunityChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
         leading: IconButton(
@@ -264,7 +264,7 @@ class _CommunityChatScreenState extends State<CommunityChatScreen> {
               ? Container(
                   padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withOpacity(0.04),
@@ -289,7 +289,7 @@ class _CommunityChatScreenState extends State<CommunityChatScreen> {
                             hintText: 'Tulis pesan...',
                             hintStyle: const TextStyle(color: AppColors.textMuted, fontFamily: 'Poppins', fontSize: 14),
                             filled: true,
-                            fillColor: const Color(0xFFF5F7F5),
+                            fillColor: Theme.of(context).scaffoldBackgroundColor,
                             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(24),
@@ -322,7 +322,7 @@ class _CommunityChatScreenState extends State<CommunityChatScreen> {
               : Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                     boxShadow: [
                       BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 16, offset: const Offset(0, -4)),
                     ],
@@ -458,7 +458,7 @@ class _ChatBubble extends StatelessWidget {
                   ),
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
-                    color: isMe ? const Color(0xFF1A4D2E) : Colors.white,
+                    color: isMe ? const Color(0xFF1A4D2E) : Theme.of(context).cardColor,
                     borderRadius: BorderRadius.only(
                       topLeft: const Radius.circular(20),
                       topRight: const Radius.circular(20),
@@ -479,7 +479,7 @@ class _ChatBubble extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 14,
                       height: 1.4,
-                      color: isMe ? Colors.white : const Color(0xFF1A4D2E),
+                      color: isMe ? Colors.white : (Theme.of(context).textTheme.bodyLarge?.color ?? const Color(0xFF1A4D2E)),
                       fontFamily: 'Poppins',
                       fontWeight: FontWeight.w500,
                     ),

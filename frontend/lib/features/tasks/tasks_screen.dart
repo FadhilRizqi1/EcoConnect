@@ -91,14 +91,14 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
     return Stack(
       children: [
         Scaffold(
-          backgroundColor: const Color(0xFFF4F7F5),
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           appBar: AppBar(
-            backgroundColor: Colors.white,
+            backgroundColor: Theme.of(context).appBarTheme.backgroundColor ?? Colors.white,
             elevation: 0,
-            title: const Text('Aksi Hijau', style: TextStyle(color: Color(0xFF1A4D2E), fontWeight: FontWeight.w800, fontFamily: 'Poppins')),
+            title: Text('Aksi Hijau', style: TextStyle(color: Theme.of(context).textTheme.titleLarge?.color, fontWeight: FontWeight.w800, fontFamily: 'Poppins')),
             actions: [
               IconButton(
-                icon: const Icon(LucideIcons.history, color: Color(0xFF1A4D2E)),
+                icon: Icon(LucideIcons.history, color: Theme.of(context).textTheme.titleLarge?.color),
                 tooltip: 'Riwayat Aktivitas',
                 onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ActivityHistoryScreen())),
               ),
@@ -274,10 +274,10 @@ class _ActionCard extends StatelessWidget {
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(20),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 12, offset: const Offset(0, 4))],
-          border: Border.all(color: const Color(0xFFF0F4F1), width: 1),
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(Theme.of(context).brightness == Brightness.dark ? 0 : 0.04), blurRadius: 12, offset: const Offset(0, 4))],
+          border: Border.all(color: Theme.of(context).brightness == Brightness.dark ? Colors.transparent : const Color(0xFFF0F4F1), width: 1),
         ),
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -294,7 +294,7 @@ class _ActionCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(action['title'], style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15, fontFamily: 'Poppins', color: Color(0xFF1A2E1E))),
+                    Text(action['title'], style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, fontFamily: 'Poppins', color: Theme.of(context).textTheme.titleLarge?.color ?? const Color(0xFF1A2E1E))),
                     const SizedBox(height: 4),
                     Text(action['description'] ?? '', style: const TextStyle(fontSize: 12, color: AppColors.textSecondary, fontFamily: 'Poppins'), maxLines: 1, overflow: TextOverflow.ellipsis),
                     const SizedBox(height: 8),
@@ -418,7 +418,7 @@ class _CheckInSheetState extends State<_CheckInSheet> {
     final accentColor = isPremium ? AppColors.accentAmber : AppColors.primaryGreen;
 
     return Container(
-      decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
+      decoration: BoxDecoration(color: Theme.of(context).scaffoldBackgroundColor, borderRadius: const BorderRadius.vertical(top: Radius.circular(28))),
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: SingleChildScrollView(
         physics: const ClampingScrollPhysics(),
@@ -471,7 +471,7 @@ class _CheckInSheetState extends State<_CheckInSheet> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Berapa $unit yang kamu lakukan?', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, fontFamily: 'Poppins', color: Color(0xFF1A2E1E))),
+                  Text('Berapa $unit yang kamu lakukan?', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, fontFamily: 'Poppins', color: Theme.of(context).textTheme.titleLarge?.color ?? const Color(0xFF1A2E1E))),
                   const SizedBox(height: 14),
 
                   // Stepper input (Fitts's Law)

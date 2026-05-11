@@ -57,9 +57,13 @@ class _PremiumProgressMenuState extends State<PremiumProgressMenu> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final sheetBg = isDark
+        ? const Color(0xFF1A2E20).withOpacity(0.97)
+        : Colors.white.withOpacity(0.97);
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.85),
+        color: sheetBg,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
         boxShadow: [
           BoxShadow(
@@ -101,13 +105,13 @@ class _PremiumProgressMenuState extends State<PremiumProgressMenu> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text(
+                            Text(
                               'Progres & Peringkat',
                               style: TextStyle(
                                 fontSize: 22,
                                 fontWeight: FontWeight.w800,
                                 fontFamily: 'Poppins',
-                                color: Color(0xFF1A4D2E),
+                                color: Theme.of(context).textTheme.titleLarge?.color,
                               ),
                             ).animate().fade().slideX(begin: -0.1),
                             Container(
@@ -116,7 +120,7 @@ class _PremiumProgressMenuState extends State<PremiumProgressMenu> {
                                 shape: BoxShape.circle,
                               ),
                               child: IconButton(
-                                icon: const Icon(LucideIcons.x, color: Color(0xFF1A4D2E)),
+                                icon: Icon(LucideIcons.x, color: Theme.of(context).textTheme.titleLarge?.color),
                                 onPressed: () => Navigator.pop(context),
                               ),
                             ).animate().fade().scale(),
@@ -133,13 +137,13 @@ class _PremiumProgressMenuState extends State<PremiumProgressMenu> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text(
+                            Text(
                               'Top Eco Warriors',
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w800,
                                 fontFamily: 'Poppins',
-                                color: Color(0xFF1A4D2E),
+                                color: Theme.of(context).textTheme.titleLarge?.color,
                               ),
                             ).animate().fade(delay: const Duration(milliseconds: 200)),
                             TextButton(
@@ -370,16 +374,17 @@ class _PremiumProgressMenuState extends State<PremiumProgressMenu> {
 
   Widget _buildRanksHorizontalList() {
     final ranks = RankHelper.ranks;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Daftar Peringkat',
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w800,
             fontFamily: 'Poppins',
-            color: Color(0xFF1A4D2E),
+            color: Theme.of(context).textTheme.titleLarge?.color,
           ),
         ),
         const SizedBox(height: 16),
@@ -396,11 +401,17 @@ class _PremiumProgressMenuState extends State<PremiumProgressMenu> {
                 margin: const EdgeInsets.only(right: 12),
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  // FIX: Explicit white in light mode — cardColor from fromSeed
+                  // may be a tonal surface indistinguishable from the sheet background.
+                  color: isDark ? const Color(0xFF1E3325) : Colors.white,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: rank.color.withOpacity(0.2), width: 1),
+                  border: Border.all(color: rank.color.withOpacity(isDark ? 0.2 : 0.3), width: 1),
                   boxShadow: [
-                    BoxShadow(color: rank.color.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))
+                    BoxShadow(
+                      color: rank.color.withOpacity(isDark ? 0.05 : 0.08),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
                   ],
                 ),
                 child: Column(
@@ -410,7 +421,12 @@ class _PremiumProgressMenuState extends State<PremiumProgressMenu> {
                     const SizedBox(height: 8),
                     Text(
                       rank.name,
-                      style: const TextStyle(color: Color(0xFF1A4D2E), fontSize: 11, fontWeight: FontWeight.w700, fontFamily: 'Poppins'),
+                      style: TextStyle(
+                        color: Theme.of(context).textTheme.titleLarge?.color,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        fontFamily: 'Poppins',
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.center,
@@ -441,15 +457,22 @@ class _PremiumProgressMenuState extends State<PremiumProgressMenu> {
                 ? const Color(0xFFCD7F32)
                 : const Color(0xFF1A4D2E).withOpacity(0.1);
 
+    final isDarkRow = Theme.of(context).brightness == Brightness.dark;
+    final rowBg = isMe
+        ? const Color(0xFF4FC87A).withOpacity(0.1)
+        : (isDarkRow ? const Color(0xFF1E3325) : Colors.white);
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: isMe ? const Color(0xFF4FC87A).withOpacity(0.1) : Colors.white,
+        color: rowBg,
         borderRadius: BorderRadius.circular(20),
-        border: isMe ? Border.all(color: const Color(0xFF4FC87A), width: 1.5) : Border.all(color: const Color(0xFF1A4D2E).withOpacity(0.05)),
+        border: isMe
+            ? Border.all(color: const Color(0xFF4FC87A), width: 1.5)
+            : Border.all(color: const Color(0xFF1A4D2E).withOpacity(isDarkRow ? 0.15 : 0.05)),
         boxShadow: [
-          if (isTop3 && !isMe) BoxShadow(color: rankColor.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4)),
+          if (isTop3 && !isMe)
+            BoxShadow(color: rankColor.withOpacity(isDarkRow ? 0.05 : 0.1), blurRadius: 10, offset: const Offset(0, 4)),
         ],
       ),
       child: Row(
@@ -507,7 +530,8 @@ class _PremiumProgressMenuState extends State<PremiumProgressMenu> {
                     fontWeight: isMe ? FontWeight.w800 : FontWeight.w600,
                     fontSize: 14,
                     fontFamily: 'Poppins',
-                    color: const Color(0xFF1A4D2E),
+                    // FIX: was hardcoded to dark green — invisible on dark backgrounds
+                    color: Theme.of(context).textTheme.titleLarge?.color ?? const Color(0xFF1A4D2E),
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,

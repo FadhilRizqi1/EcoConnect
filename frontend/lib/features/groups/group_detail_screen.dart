@@ -9,10 +9,12 @@ class GroupDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    WidgetsBinding.instance.addPostFrameCallback((_) => context.go('/komunitas/$groupId'));
-    return const Scaffold(
-      backgroundColor: AppColors.backgroundLight,
-      body: Center(child: CircularProgressIndicator(color: AppColors.primaryGreen)),
+    WidgetsBinding.instance
+        .addPostFrameCallback((_) => context.go('/komunitas/$groupId'));
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      body: const Center(
+          child: CircularProgressIndicator(color: AppColors.primaryGreen)),
     );
   }
 }

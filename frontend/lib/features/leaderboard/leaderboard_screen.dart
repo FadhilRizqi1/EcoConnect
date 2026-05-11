@@ -43,7 +43,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7F5),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: RefreshIndicator(
         onRefresh: _load,
         color: AppColors.primaryGreen,
@@ -55,9 +55,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
               floating: true,
               backgroundColor: Colors.transparent,
               elevation: 0,
-              title: const Text(
+              title: Text(
                 'Papan Peringkat',
-                style: TextStyle(color: Color(0xFF1A4D2E), fontWeight: FontWeight.w800, fontFamily: 'Poppins'),
+                style: TextStyle(color: Theme.of(context).textTheme.titleLarge?.color, fontWeight: FontWeight.w800, fontFamily: 'Poppins'),
               ).animate().fade().slideY(begin: -0.2),
             ),
 
@@ -80,7 +80,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                               if (_users.length > 3)
                                 Align(
                                   alignment: Alignment.centerLeft,
-                                  child: const Text('Peringkat Selanjutnya', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Color(0xFF1A4D2E), fontFamily: 'Poppins'))
+                                  child: Text('Peringkat Selanjutnya', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Theme.of(context).textTheme.titleLarge?.color ?? const Color(0xFF1A4D2E), fontFamily: 'Poppins'))
                                     .animate().fade(delay: const Duration(milliseconds: 300)),
                                 ),
                               const SizedBox(height: 16),
@@ -175,7 +175,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                           child: (user['avatar'] == null || user['avatar'].toString().isEmpty) ? Center(
                             child: Text(
                               ((user['name'] as String?) ?? '?')[0].toUpperCase(),
-                              style: TextStyle(fontSize: isFirst ? 28 : 20, fontWeight: FontWeight.w800, color: const Color(0xFF1A4D2E)),
+                              style: TextStyle(fontSize: isFirst ? 28 : 20, fontWeight: FontWeight.w800, color: Theme.of(context).textTheme.titleLarge?.color ?? const Color(0xFF1A4D2E)),
                             ),
                           ) : null,
                         ),
@@ -194,7 +194,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                     Text(
                       (user['name'] as String?)?.split(' ').first ?? '?',
                       style: TextStyle(
-                        color: const Color(0xFF1A4D2E),
+                        color: Theme.of(context).textTheme.titleLarge?.color ?? const Color(0xFF1A4D2E),
                         fontWeight: isMe ? FontWeight.w800 : FontWeight.w600,
                         fontFamily: 'Poppins',
                         fontSize: isFirst ? 14 : 12,
@@ -209,7 +209,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                       decoration: BoxDecoration(color: const Color(0xFF1A4D2E).withOpacity(0.06), borderRadius: BorderRadius.circular(8)),
                       child: Text(
                         '${user['reputation_points']} pts',
-                        style: const TextStyle(color: Color(0xFF1A4D2E), fontSize: 10, fontWeight: FontWeight.w700, fontFamily: 'Poppins'),
+                        style: TextStyle(color: Theme.of(context).textTheme.titleLarge?.color ?? const Color(0xFF1A4D2E), fontSize: 10, fontWeight: FontWeight.w700, fontFamily: 'Poppins'),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -275,7 +275,7 @@ class _LeaderboardRow extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isMe ? const Color(0xFF4FC87A).withOpacity(0.1) : Colors.white,
+          color: isMe ? const Color(0xFF4FC87A).withOpacity(0.1) : Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(20),
           border: isMe ? Border.all(color: const Color(0xFF4FC87A), width: 1.5) : Border.all(color: Colors.transparent),
           boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))],
@@ -293,7 +293,7 @@ class _LeaderboardRow extends StatelessWidget {
               child: Center(
                 child: Text(
                   '$rank',
-                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: isMe ? Colors.white : const Color(0xFF1A4D2E), fontFamily: 'Poppins'),
+                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: isMe ? Colors.white : (Theme.of(context).textTheme.titleLarge?.color ?? const Color(0xFF1A4D2E)), fontFamily: 'Poppins'),
                 ),
               ),
             ),
@@ -314,7 +314,7 @@ class _LeaderboardRow extends StatelessWidget {
               child: (user['avatar'] == null || user['avatar'].toString().isEmpty) ? Center(
                 child: Text(
                   ((user['name'] as String?) ?? '?')[0].toUpperCase(),
-                  style: const TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF1A4D2E), fontSize: 16),
+                  style: TextStyle(fontWeight: FontWeight.w800, color: Theme.of(context).textTheme.titleLarge?.color ?? const Color(0xFF1A4D2E), fontSize: 16),
                 ),
               ) : null,
             ),
@@ -327,7 +327,7 @@ class _LeaderboardRow extends StatelessWidget {
               children: [
                 Text(
                   '${user['name']}${isMe ? ' (Kamu)' : ''}',
-                  style: TextStyle(fontWeight: isMe ? FontWeight.w800 : FontWeight.w600, fontSize: 14, fontFamily: 'Poppins', color: const Color(0xFF1A4D2E)),
+                  style: TextStyle(fontWeight: isMe ? FontWeight.w800 : FontWeight.w600, fontSize: 14, fontFamily: 'Poppins', color: Theme.of(context).textTheme.titleLarge?.color ?? const Color(0xFF1A4D2E)),
                   maxLines: 1, overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 2),
@@ -346,7 +346,7 @@ class _LeaderboardRow extends StatelessWidget {
                 const SizedBox(width: 6),
                 Text(
                   '${user['reputation_points']}',
-                  style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14, fontFamily: 'Poppins', color: Color(0xFF1A4D2E)),
+                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14, fontFamily: 'Poppins', color: Theme.of(context).textTheme.titleLarge?.color ?? const Color(0xFF1A4D2E)),
                 ),
               ],
             ),

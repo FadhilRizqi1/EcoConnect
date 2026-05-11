@@ -10,10 +10,12 @@ class GroupsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Redirect ke halaman komunitas baru
-    WidgetsBinding.instance.addPostFrameCallback((_) => context.go('/komunitas'));
-    return const Scaffold(
-      backgroundColor: AppColors.backgroundLight,
-      body: Center(child: CircularProgressIndicator(color: AppColors.primaryGreen)),
+    WidgetsBinding.instance
+        .addPostFrameCallback((_) => context.go('/komunitas'));
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      body: const Center(
+          child: CircularProgressIndicator(color: AppColors.primaryGreen)),
     );
   }
 }

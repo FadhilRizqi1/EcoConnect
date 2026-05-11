@@ -45,7 +45,7 @@ class _CommunitiesScreenState extends State<CommunitiesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7F5),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: CustomScrollView(
         slivers: [
           // Premium App Bar
@@ -54,9 +54,9 @@ class _CommunitiesScreenState extends State<CommunitiesScreen> {
             floating: true,
             backgroundColor: Colors.transparent,
             elevation: 0,
-            title: const Text(
+            title: Text(
               'Komunitas Hijau',
-              style: TextStyle(color: Color(0xFF1A4D2E), fontWeight: FontWeight.w800, fontFamily: 'Poppins'),
+              style: TextStyle(color: Theme.of(context).textTheme.titleLarge?.color, fontWeight: FontWeight.w800, fontFamily: 'Poppins'),
             ).animate().fade().slideY(begin: -0.2),
             bottom: PreferredSize(
               preferredSize: const Size.fromHeight(60),
@@ -185,7 +185,7 @@ class _FilterChip extends StatelessWidget {
         margin: const EdgeInsets.only(right: 10),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: selected ? const Color(0xFF1A4D2E) : Colors.white,
+          color: selected ? (Theme.of(context).brightness == Brightness.dark ? AppColors.primaryGreenMint : const Color(0xFF1A4D2E)) : Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(20),
           boxShadow: selected ? [BoxShadow(color: const Color(0xFF1A4D2E).withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4))] : [],
           border: Border.all(color: selected ? Colors.transparent : const Color(0xFFE0E0E0)),
@@ -193,14 +193,14 @@ class _FilterChip extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 14, color: selected ? Colors.white : const Color(0xFF1A4D2E)),
+            Icon(icon, size: 14, color: selected ? Colors.white : (Theme.of(context).textTheme.titleLarge?.color ?? const Color(0xFF1A4D2E))),
             const SizedBox(width: 8),
             Text(
               label,
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                color: selected ? Colors.white : const Color(0xFF1A4D2E),
+                color: selected ? Colors.white : (Theme.of(context).textTheme.titleLarge?.color ?? const Color(0xFF1A4D2E)),
                 fontFamily: 'Poppins',
               ),
             ),
@@ -372,11 +372,11 @@ class _EmptyView extends StatelessWidget {
         const SizedBox(height: 80),
         Container(
           padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(color: const Color(0xFF1A4D2E).withOpacity(0.06), shape: BoxShape.circle),
-          child: const Icon(LucideIcons.leaf, size: 48, color: Color(0xFF1A4D2E)),
+          decoration: BoxDecoration(color: (Theme.of(context).textTheme.titleLarge?.color ?? const Color(0xFF1A4D2E)).withOpacity(0.06), shape: BoxShape.circle),
+          child: Icon(LucideIcons.leaf, size: 48, color: Theme.of(context).textTheme.titleLarge?.color ?? const Color(0xFF1A4D2E)),
         ).animate().fade().scale(),
         const SizedBox(height: 24),
-        const Text('Belum ada komunitas', style: TextStyle(color: Color(0xFF1A4D2E), fontSize: 16, fontWeight: FontWeight.w700, fontFamily: 'Poppins')),
+        Text('Belum ada komunitas', style: TextStyle(color: Theme.of(context).textTheme.titleLarge?.color ?? const Color(0xFF1A4D2E), fontSize: 16, fontWeight: FontWeight.w700, fontFamily: 'Poppins')),
         const SizedBox(height: 8),
         const Text('Jadilah yang pertama untuk bergabung\natau membuat komunitas baru!', textAlign: TextAlign.center, style: TextStyle(color: AppColors.textSecondary, fontFamily: 'Poppins', fontSize: 13)),
       ],

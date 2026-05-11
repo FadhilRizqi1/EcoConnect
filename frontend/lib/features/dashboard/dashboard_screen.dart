@@ -2,7 +2,6 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/rank_helper.dart';
 import '../../services/api_service.dart';
@@ -52,10 +51,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> _load() async {
-    setState(() { _loading = true; _error = null; });
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
     try {
       final userId = await AuthService.getUserId();
-      if (userId == null) { context.go('/masuk'); return; }
+      if (userId == null) {
+        context.go('/masuk');
+        return;
+      }
 
       final results = await Future.wait([
         ApiService.getProfil(userId),
@@ -68,128 +73,198 @@ class _DashboardScreenState extends State<DashboardScreen> {
       if (mounted) {
         setState(() {
           _profile = profile;
-          
-          final userCategoryStr = profile['profil']?['category']?.toString() ?? '';
-          final userCategories = userCategoryStr.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
-          var allPremium = actions.where((a) => a['is_premium'] == true).toList();
-          
+
+          final userCategoryStr =
+              profile['profil']?['category']?.toString() ?? '';
+          final userCategories = userCategoryStr
+              .split(',')
+              .map((e) => e.trim())
+              .where((e) => e.isNotEmpty)
+              .toList();
+          var allPremium =
+              actions.where((a) => a['is_premium'] == true).toList();
+
           if (userCategories.isNotEmpty) {
-            final matched = allPremium.where((a) => userCategories.contains(a['category'])).toList();
-            final others = allPremium.where((a) => !userCategories.contains(a['category'])).toList();
+            final matched = allPremium
+                .where((a) => userCategories.contains(a['category']))
+                .toList();
+            final others = allPremium
+                .where((a) => !userCategories.contains(a['category']))
+                .toList();
             _premiumActions = [...matched, ...others];
           } else {
             _premiumActions = allPremium;
           }
-          
+
           _loading = false;
         });
       }
     } on ApiException catch (e) {
-      if (mounted) setState(() { _error = e.message; _loading = false; });
+      if (mounted)
+        setState(() {
+          _error = e.message;
+          _loading = false;
+        });
     } catch (e, stack) {
       print('Dashboard error: $e\n$stack');
-      if (mounted) setState(() { _error = 'Error: $e'; _loading = false; });
+      if (mounted)
+        setState(() {
+          _error = 'Error: $e';
+          _loading = false;
+        });
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final titleColor = Theme.of(context).textTheme.titleLarge?.color ??
+        const Color(0xFF1A4D2E);
+
+    // ─── FIX: Use Scaffold.appBar (pinned, managed by framework) instead of
+    //         SliverAppBar(floating:true) which was causing a scroll-extent race
+    //         condition: when content switched from loading (400px) to full
+    //         content (1200px+), the floating SliverAppBar collapsed and pushed
+    //         all content to an unexpected scroll offset in light mode.
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7F5), // Light Mint background
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: AppBar(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        // Leaderboard button — far left
+        leadingWidth: 60,
+        leading: Container(
+          margin: const EdgeInsets.only(left: 12),
+          decoration: BoxDecoration(
+            color: isDark ? Theme.of(context).cardColor : Colors.white,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                  color: Colors.black.withOpacity(isDark ? 0.05 : 0.08),
+                  blurRadius: 10)
+            ],
+          ),
+          child: IconButton(
+            icon: const Icon(LucideIcons.barChart2,
+                color: AppColors.accentAmber, size: 20),
+            tooltip: 'Progres & Peringkat',
+            onPressed: () => _showPremiumSubMenu(context),
+          ),
+        ),
+        title: Text(
+          'EcoConnect',
+          style: TextStyle(
+              color: titleColor,
+              fontWeight: FontWeight.w800,
+              fontFamily: 'Poppins'),
+        ),
+        actions: [
+          Container(
+            margin: const EdgeInsets.only(right: 16),
+            decoration: BoxDecoration(
+              color: isDark ? Theme.of(context).cardColor : Colors.white,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                    color: Colors.black.withOpacity(isDark ? 0.05 : 0.08),
+                    blurRadius: 10)
+              ],
+            ),
+            child: IconButton(
+              icon: Icon(
+                LucideIcons.logOut,
+                color: isDark
+                    ? AppColors.primaryGreenMint
+                    : const Color(0xFF1A4D2E),
+                size: 20,
+              ),
+              tooltip: 'Keluar',
+              onPressed: () async {
+                await AuthService.logout();
+                if (mounted) context.go('/masuk');
+              },
+            ),
+          ),
+        ],
+      ),
       body: RefreshIndicator(
         onRefresh: _load,
         color: AppColors.primaryGreen,
-        child: CustomScrollView(
-          slivers: [
-            // Premium Header
-            SliverAppBar(
-              expandedHeight: 80,
-              floating: true,
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              title: const Text(
-                'EcoConnect',
-                style: TextStyle(color: Color(0xFF1A4D2E), fontWeight: FontWeight.w800, fontFamily: 'Poppins'),
-              ).animate().fade().slideY(begin: -0.2),
-              actions: [
-                Container(
-                  margin: const EdgeInsets.only(right: 12),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
+        // IMPORTANT: SingleChildScrollView is always the direct child of
+        // RefreshIndicator — it needs a Scrollable child with scroll semantics.
+        // Moving _loading inside the scroll view prevents the body from going
+        // blank when RefreshIndicator's child is a non-scrollable Center widget.
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: _loading
+              ? SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.7,
+                  child: const Center(
+                    child: CircularProgressIndicator(
+                        color: AppColors.primaryGreen),
                   ),
-                  child: IconButton(
-                    icon: const Icon(LucideIcons.barChart2, color: AppColors.accentAmber, size: 20),
-                    tooltip: 'Progres & Peringkat',
-                    onPressed: () => _showPremiumSubMenu(context),
-                  ),
-                ).animate().fade().scale(delay: const Duration(milliseconds: 100)),
-                Container(
-                  margin: const EdgeInsets.only(right: 16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
-                  ),
-                  child: IconButton(
-                    icon: const Icon(LucideIcons.logOut, color: Color(0xFF1A4D2E), size: 20),
-                    tooltip: 'Keluar',
-                    onPressed: () async {
-                      await AuthService.logout();
-                      if (mounted) context.go('/masuk');
-                    },
-                  ),
-                ).animate().fade().scale(),
-              ],
-            ),
-
-            // Body Content
-            SliverToBoxAdapter(
-              child: _loading
-                  ? const SizedBox(
-                      height: 400,
-                      child: Center(child: CircularProgressIndicator(color: AppColors.primaryGreen)),
+                )
+              : _error != null
+                  ? SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.7,
+                      child: _buildError(),
                     )
-                  : _error != null
-                      ? _buildError()
-                      : Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 10, 20, 100), // padding bottom for fab
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _buildWelcomeHeader().animate().fade().slideX(),
-                              const SizedBox(height: 32),
-                              
-                              const Text('Dampak Hijaumu', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, fontFamily: 'Poppins', color: Color(0xFF1A4D2E))).animate().fade(),
-                              const SizedBox(height: 16),
-                              _buildBentoGrid().animate().fade().scale(delay: const Duration(milliseconds: 100)),
-                              
-                              const SizedBox(height: 32),
-                              
-                              if (_premiumActions.isNotEmpty) ...[
-                                const Text('Misi Premium Hari Ini', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, fontFamily: 'Poppins', color: Color(0xFF1A4D2E))).animate().fade(),
-                                const SizedBox(height: 16),
-                                _buildVonRestorffCard(_premiumActions.first).animate().fade().slideY(delay: const Duration(milliseconds: 200)),
-                                const SizedBox(height: 32),
-                              ],
-                              
-                              const Text('Komunitas Diikuti', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, fontFamily: 'Poppins', color: Color(0xFF1A4D2E))).animate().fade(),
-                              const SizedBox(height: 16),
-                              _buildJoinedCommunities().animate().fade().slideX(delay: const Duration(milliseconds: 250)),
-                              const SizedBox(height: 32),
-                              
-                              const Text('Aktivitas Terakhir', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, fontFamily: 'Poppins', color: Color(0xFF1A4D2E))).animate().fade(),
-                              const SizedBox(height: 16),
-                              _buildRecentActivity().animate().fade().slideY(delay: const Duration(milliseconds: 300)),
-                            ],
-                          ),
-                        ),
-            ),
-          ],
+                  : Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 10, 20, 100),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _animateOnce(_buildWelcomeHeader()),
+                          const SizedBox(height: 32),
+                          _animateOnce(Text('Dampak Hijaumu',
+                              style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w800,
+                                  fontFamily: 'Poppins',
+                                  color: titleColor))),
+                          const SizedBox(height: 16),
+                          _animateOnce(_buildBentoGrid()),
+                          const SizedBox(height: 32),
+                          if (_premiumActions.isNotEmpty) ...[
+                            _animateOnce(Text('Misi Premium Hari Ini',
+                                style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w800,
+                                    fontFamily: 'Poppins',
+                                    color: titleColor))),
+                            const SizedBox(height: 16),
+                            _animateOnce(
+                                _buildVonRestorffCard(_premiumActions.first)),
+                            const SizedBox(height: 32),
+                          ],
+                          _animateOnce(Text('Komunitas Diikuti',
+                              style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w800,
+                                  fontFamily: 'Poppins',
+                                  color: titleColor))),
+                          const SizedBox(height: 16),
+                          _animateOnce(_buildJoinedCommunities()),
+                          const SizedBox(height: 32),
+                          _animateOnce(Text('Aktivitas Terakhir',
+                              style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w800,
+                                  fontFamily: 'Poppins',
+                                  color: titleColor))),
+                          const SizedBox(height: 16),
+                          _animateOnce(_buildRecentActivity()),
+                        ],
+                      ),
+                    ),
         ),
       ),
     );
+  }
+
+  Widget _animateOnce(Widget child) {
+    return child;
   }
 
   Widget _buildError() {
@@ -200,7 +275,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           const SizedBox(height: 60),
           const Icon(LucideIcons.wifiOff, color: AppColors.textMuted, size: 48),
           const SizedBox(height: 16),
-          Text(_error!, style: const TextStyle(color: AppColors.textSecondary, fontFamily: 'Poppins')),
+          Text(_error!,
+              style: const TextStyle(
+                  color: AppColors.textSecondary, fontFamily: 'Poppins')),
           const SizedBox(height: 24),
           ElevatedButton.icon(
             onPressed: _load,
@@ -209,7 +286,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primaryGreen,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16)),
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
           ),
@@ -230,12 +308,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final pointsNeeded = RankHelper.getPointsNeeded(points);
     final nextLevel = nextRank?.name ?? 'Max';
 
+    final isDarkHeader = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24), // Bento style radius
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 20, offset: const Offset(0, 8))],
+        color: isDarkHeader ? Theme.of(context).cardColor : Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isDarkHeader ? 0.12 : 0.07),
+            blurRadius: 20,
+            offset: const Offset(0, 6),
+          ),
+        ],
+        border: isDarkHeader
+            ? null
+            : Border.all(color: const Color(0xFFE8F0EB), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -246,23 +334,47 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 width: 56,
                 height: 56,
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(colors: [rank.color.withOpacity(0.8), rank.color], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                  gradient: LinearGradient(
+                      colors: [rank.color.withOpacity(0.8), rank.color],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight),
                   borderRadius: BorderRadius.circular(16),
-                  boxShadow: [BoxShadow(color: rank.color.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4))],
+                  boxShadow: [
+                    BoxShadow(
+                        color: rank.color.withOpacity(0.3),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4))
+                  ],
                 ),
-                child: Center(child: Icon(rank.icon, color: Colors.white, size: 28)),
+                child: Center(
+                    child: Icon(rank.icon, color: Colors.white, size: 28)),
               ),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Halo, $name!', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, fontFamily: 'Poppins', color: Color(0xFF1A4D2E))),
+                    Text('Halo, $name!',
+                        style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            fontFamily: 'Poppins',
+                            color:
+                                Theme.of(context).textTheme.titleLarge?.color ??
+                                    const Color(0xFF1A4D2E))),
                     const SizedBox(height: 4),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(color: rank.color.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
-                      child: Text(level, style: TextStyle(fontSize: 11, color: rank.color, fontWeight: FontWeight.w700, fontFamily: 'Poppins')),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                          color: rank.color.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8)),
+                      child: Text(level,
+                          style: TextStyle(
+                              fontSize: 11,
+                              color: rank.color,
+                              fontWeight: FontWeight.w700,
+                              fontFamily: 'Poppins')),
                     ),
                   ],
                 ),
@@ -274,9 +386,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Progres Level', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, fontFamily: 'Poppins', color: const Color(0xFF1A4D2E).withOpacity(0.7))),
+              Text('Progres Level',
+                  style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      fontFamily: 'Poppins',
+                      color: (Theme.of(context).textTheme.titleLarge?.color ??
+                              const Color(0xFF1A4D2E))
+                          .withOpacity(0.7))),
               if (pointsNeeded > 0)
-                Text('$pointsNeeded poin ke $nextLevel', style: const TextStyle(fontSize: 11, fontFamily: 'Poppins', color: AppColors.textSecondary)),
+                Text('$pointsNeeded poin ke $nextLevel',
+                    style: const TextStyle(
+                        fontSize: 11,
+                        fontFamily: 'Poppins',
+                        color: AppColors.textSecondary)),
             ],
           ),
           const SizedBox(height: 8),
@@ -285,8 +408,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 8,
-              backgroundColor: const Color(0xFF1A4D2E).withOpacity(0.1),
-              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF4FC87A)),
+              backgroundColor: (Theme.of(context).textTheme.titleLarge?.color ??
+                      const Color(0xFF1A4D2E))
+                  .withOpacity(0.1),
+              valueColor:
+                  const AlwaysStoppedAnimation<Color>(Color(0xFF4FC87A)),
             ),
           ),
         ],
@@ -296,9 +422,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildBentoGrid() {
     final profil = _profile?['profil'] as Map<String, dynamic>? ?? {};
-    final carbon = (_profile?['total_karbon_kg'] as num? ?? profil['total_carbon_saved'] as num? ?? 0).toDouble();
-    final tasks  = (_profile?['tugas_selesai'] as num? ?? 0).toInt();
+    final carbon = (_profile?['total_karbon_kg'] as num? ??
+            profil['total_carbon_saved'] as num? ??
+            0)
+        .toDouble();
+    final tasks = (_profile?['tugas_selesai'] as num? ?? 0).toInt();
     final points = (profil['reputation_points'] as num? ?? 0).toInt();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Row(
       children: [
@@ -309,9 +439,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
             icon: LucideIcons.globe,
             title: 'Karbon Dihemat',
             value: '${carbon.toStringAsFixed(1)} kg',
-            color: const Color(0xFF1A4D2E), // Deep Green
+            color:
+                isDark ? AppColors.primaryGreenMint : const Color(0xFF1A4D2E),
             large: true,
-            tooltip: 'Total estimasi karbon dioksida yang berhasil dicegah berkat aksimu.',
+            tooltip:
+                'Total estimasi karbon dioksida yang berhasil dicegah berkat aksimu.',
           ),
         ),
         const SizedBox(width: 16),
@@ -324,16 +456,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 icon: LucideIcons.checkCircle,
                 title: 'Total Aksi',
                 value: '$tasks',
-                color: const Color(0xFF1A73C8), // Trust Blue
+                color:
+                    isDark ? const Color(0xFF60A5FA) : const Color(0xFF1A73C8),
                 large: false,
-                tooltip: 'Total aksi ramah lingkungan yang sudah kamu check-in.',
+                tooltip:
+                    'Total aksi ramah lingkungan yang sudah kamu check-in.',
               ),
               const SizedBox(height: 16),
               _StatCard(
                 icon: LucideIcons.star,
                 title: 'Poin',
                 value: '$points',
-                color: AppColors.accentAmber,
+                color:
+                    isDark ? AppColors.accentAmberLight : AppColors.accentAmber,
                 large: false,
                 tooltip: 'Poin reputasi dari kontribusimu.',
               ),
@@ -355,7 +490,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
           end: Alignment.bottomRight,
         ),
         boxShadow: [
-          BoxShadow(color: AppColors.accentAmber.withOpacity(0.4), blurRadius: 20, spreadRadius: 2, offset: const Offset(0, 8)),
+          BoxShadow(
+              color: AppColors.accentAmber.withOpacity(0.4),
+              blurRadius: 20,
+              spreadRadius: 2,
+              offset: const Offset(0, 8)),
         ],
       ),
       child: ClipRRect(
@@ -366,7 +505,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.15),
-              border: Border.all(color: Colors.white.withOpacity(0.4), width: 1.5),
+              border:
+                  Border.all(color: Colors.white.withOpacity(0.4), width: 1.5),
               borderRadius: BorderRadius.circular(24),
             ),
             child: Row(
@@ -376,29 +516,57 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(8)),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(8)),
                         child: const Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(LucideIcons.flame, color: Colors.white, size: 14),
+                            Icon(LucideIcons.flame,
+                                color: Colors.white, size: 14),
                             SizedBox(width: 6),
-                            Text('PREMIUM', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 10, fontFamily: 'Poppins', letterSpacing: 1)),
+                            Text('PREMIUM',
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 10,
+                                    fontFamily: 'Poppins',
+                                    letterSpacing: 1)),
                           ],
                         ),
                       ),
                       const SizedBox(height: 12),
-                      Text(action['title'], style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 18, fontFamily: 'Poppins', height: 1.2)),
+                      Text(action['title'],
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 18,
+                              fontFamily: 'Poppins',
+                              height: 1.2)),
                       const SizedBox(height: 8),
                       Row(
                         children: [
-                          const Icon(LucideIcons.award, color: Colors.white70, size: 14),
+                          const Icon(LucideIcons.award,
+                              color: Colors.white70, size: 14),
                           const SizedBox(width: 4),
-                          Text('+${action['points']} Poin', style: const TextStyle(color: Colors.white70, fontSize: 12, fontFamily: 'Poppins', fontWeight: FontWeight.w600)),
+                          Text('+${action['points']} Poin',
+                              style: const TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 12,
+                                  fontFamily: 'Poppins',
+                                  fontWeight: FontWeight.w600)),
                           const SizedBox(width: 12),
-                          const Icon(LucideIcons.wind, color: Colors.white70, size: 14),
+                          const Icon(LucideIcons.wind,
+                              color: Colors.white70, size: 14),
                           const SizedBox(width: 4),
-                          Text('${action['carbon_value']} kg', style: const TextStyle(color: Colors.white70, fontSize: 12, fontFamily: 'Poppins', fontWeight: FontWeight.w600)),
+                          Text('${action['carbon_value']} kg',
+                              style: const TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 12,
+                                  fontFamily: 'Poppins',
+                                  fontWeight: FontWeight.w600)),
                         ],
                       ),
                     ],
@@ -407,12 +575,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 const SizedBox(width: 16),
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                     shape: BoxShape.circle,
-                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10)],
+                    boxShadow: [
+                      BoxShadow(
+                          color: Colors.black.withOpacity(0.1), blurRadius: 10)
+                    ],
                   ),
                   child: IconButton(
-                    icon: const Icon(LucideIcons.play, color: AppColors.accentAmber),
+                    icon: const Icon(LucideIcons.play,
+                        color: AppColors.accentAmber),
                     onPressed: () => context.go('/tugas'),
                   ),
                 ),
@@ -427,41 +599,74 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildJoinedCommunities() {
     final joined = _profile?['joined_communities'] as List<dynamic>? ?? [];
 
+    final isDarkComm = Theme.of(context).brightness == Brightness.dark;
     if (joined.isEmpty) {
       return Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: const Color(0xFF1A4D2E).withOpacity(0.04),
+          color: isDarkComm
+              ? const Color(0xFF1A4D2E).withOpacity(0.12)
+              : Colors.white,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: const Color(0xFF1A4D2E).withOpacity(0.1)),
+          border: Border.all(
+            color: const Color(0xFF1A4D2E).withOpacity(isDarkComm ? 0.2 : 0.12),
+          ),
+          boxShadow: isDarkComm
+              ? []
+              : [
+                  BoxShadow(
+                      color: Colors.black.withOpacity(0.06),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4)),
+                ],
         ),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(12),
-              decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-              child: const Icon(LucideIcons.users, color: Color(0xFF1A4D2E)),
+              decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor, shape: BoxShape.circle),
+              child: Icon(LucideIcons.users,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.primaryGreenMint
+                      : const Color(0xFF1A4D2E)),
             ),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Belum Ada Komunitas', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, fontFamily: 'Poppins', color: Color(0xFF1A4D2E))),
+                  Text('Belum Ada Komunitas',
+                      style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                          fontFamily: 'Poppins',
+                          color:
+                              Theme.of(context).textTheme.titleLarge?.color ??
+                                  const Color(0xFF1A4D2E))),
                   const SizedBox(height: 4),
-                  const Text('Ayo gabung komunitas!', style: TextStyle(fontSize: 12, color: AppColors.textSecondary, fontFamily: 'Poppins')),
+                  const Text('Ayo gabung komunitas!',
+                      style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
+                          fontFamily: 'Poppins')),
                 ],
               ),
             ),
             ElevatedButton(
               onPressed: () => context.go('/komunitas'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF1A4D2E), 
-                foregroundColor: Colors.white, 
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                backgroundColor: const Color(0xFF1A4D2E),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
                 elevation: 0,
               ),
-              child: const Text('Cari', style: TextStyle(fontFamily: 'Poppins', fontSize: 12, fontWeight: FontWeight.w600)),
+              child: const Text('Cari',
+                  style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600)),
             )
           ],
         ),
@@ -475,6 +680,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         itemCount: joined.length,
         itemBuilder: (context, index) {
           final c = joined[index];
+          final isDarkComm = Theme.of(context).brightness == Brightness.dark;
           return GestureDetector(
             onTap: () => context.go('/komunitas/${c['id']}'),
             child: Container(
@@ -482,9 +688,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
               margin: const EdgeInsets.only(right: 16),
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: isDarkComm ? Theme.of(context).cardColor : Colors.white,
                 borderRadius: BorderRadius.circular(24),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 16, offset: const Offset(0, 4))],
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(isDarkComm ? 0.04 : 0.07),
+                    blurRadius: 16,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+                border: isDarkComm
+                    ? null
+                    : Border.all(color: const Color(0xFFE8F0EB), width: 1),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -495,14 +710,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     children: [
                       Container(
                         padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(color: const Color(0xFF4FC87A).withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
-                        child: const Icon(LucideIcons.leaf, color: Color(0xFF4FC87A), size: 16),
+                        decoration: BoxDecoration(
+                            color: const Color(0xFF4FC87A).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12)),
+                        child: const Icon(LucideIcons.leaf,
+                            color: Color(0xFF4FC87A), size: 16),
                       ),
                       Row(
                         children: [
-                          const Icon(LucideIcons.users, size: 12, color: AppColors.textSecondary),
+                          const Icon(LucideIcons.users,
+                              size: 12, color: AppColors.textSecondary),
                           const SizedBox(width: 4),
-                          Text('${c['member_count']} Anggota', style: const TextStyle(fontSize: 10, fontFamily: 'Poppins', color: AppColors.textSecondary)),
+                          Text('${c['member_count']} Anggota',
+                              style: const TextStyle(
+                                  fontSize: 10,
+                                  fontFamily: 'Poppins',
+                                  color: AppColors.textSecondary)),
                         ],
                       )
                     ],
@@ -510,9 +733,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(c['name'], maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15, fontFamily: 'Poppins', color: Color(0xFF1A4D2E))),
+                      Text(c['name'],
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 15,
+                              fontFamily: 'Poppins',
+                              color: Theme.of(context)
+                                      .textTheme
+                                      .titleLarge
+                                      ?.color ??
+                                  const Color(0xFF1A4D2E))),
                       const SizedBox(height: 4),
-                      Text(c['category'], style: const TextStyle(fontSize: 11, fontFamily: 'Poppins', color: AppColors.textSecondary)),
+                      Text(c['category'],
+                          style: const TextStyle(
+                              fontSize: 11,
+                              fontFamily: 'Poppins',
+                              color: AppColors.textSecondary)),
                     ],
                   ),
                 ],
@@ -527,30 +765,56 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildRecentActivity() {
     final recent = _profile?['recent_activity'] as List<dynamic>? ?? [];
 
+    final isDarkAct = Theme.of(context).brightness == Brightness.dark;
     if (recent.isEmpty) {
       return Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isDarkAct ? Theme.of(context).cardColor : Colors.white,
           borderRadius: BorderRadius.circular(24),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 20, offset: const Offset(0, 8))],
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(isDarkAct ? 0.08 : 0.07),
+              blurRadius: 20,
+              offset: const Offset(0, 6),
+            ),
+          ],
+          border: isDarkAct
+              ? null
+              : Border.all(color: const Color(0xFFE8F0EB), width: 1),
         ),
         child: Row(
           children: [
             Container(
               width: 48,
               height: 48,
-              decoration: BoxDecoration(color: const Color(0xFF1A4D2E).withOpacity(0.08), borderRadius: BorderRadius.circular(16)),
-              child: const Center(child: Icon(LucideIcons.inbox, color: Color(0xFF1A4D2E))),
+              decoration: BoxDecoration(
+                  color: Theme.of(context).primaryColor.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(16)),
+              child: Center(
+                  child: Icon(LucideIcons.inbox,
+                      color: Theme.of(context).primaryColor)),
             ),
             const SizedBox(width: 16),
-            const Expanded(
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Belum ada aktivitas', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, fontFamily: 'Poppins', color: Color(0xFF1A4D2E))),
-                  SizedBox(height: 4),
-                  Text('Tap tombol tengah untuk check-in aksi pertamamu!', style: TextStyle(fontSize: 12, color: AppColors.textSecondary, fontFamily: 'Poppins', height: 1.3)),
+                  Text('Belum ada aktivitas',
+                      style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          fontFamily: 'Poppins',
+                          color:
+                              Theme.of(context).textTheme.titleLarge?.color ??
+                                  Theme.of(context).primaryColor)),
+                  const SizedBox(height: 4),
+                  const Text('Tap tombol tengah untuk check-in aksi pertamamu!',
+                      style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
+                          fontFamily: 'Poppins',
+                          height: 1.3)),
                 ],
               ),
             ),
@@ -563,24 +827,35 @@ class _DashboardScreenState extends State<DashboardScreen> {
       children: recent.map<Widget>((log) {
         final title = log['title']?.toString() ?? 'Aksi Hijau';
         final category = log['category']?.toString() ?? '';
-        final points = (log['points_earned'] ?? log['impact_points'] ?? 0) as num;
-        
+        final points =
+            (log['points_earned'] ?? log['impact_points'] ?? 0) as num;
+
         final iconData = {
-          'Diet Vegan': LucideIcons.apple, 
-          'Hemat Energi': LucideIcons.zap,
-          'Transportasi Hijau': LucideIcons.bike, 
-          'Kelola Sampah': LucideIcons.recycle, 
-          'Hemat Air': LucideIcons.droplet,
-        }[category] ?? LucideIcons.leaf;
+              'Diet Vegan': LucideIcons.apple,
+              'Hemat Energi': LucideIcons.zap,
+              'Transportasi Hijau': LucideIcons.bike,
+              'Kelola Sampah': LucideIcons.recycle,
+              'Hemat Air': LucideIcons.droplet,
+            }[category] ??
+            LucideIcons.leaf;
 
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: isDarkAct ? Theme.of(context).cardColor : Colors.white,
             borderRadius: BorderRadius.circular(20),
-            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))],
-            border: Border.all(color: const Color(0xFFF0F0F0), width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(isDarkAct ? 0 : 0.06),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+            border: Border.all(
+              color: isDarkAct ? Colors.transparent : const Color(0xFFE8F0EB),
+              width: 1,
+            ),
           ),
           child: Row(
             children: [
@@ -588,30 +863,60 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1A4D2E).withOpacity(0.06), 
-                  borderRadius: BorderRadius.circular(14)
-                ),
-                child: Center(child: Icon(iconData, color: const Color(0xFF1A4D2E), size: 20)),
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white.withOpacity(0.08)
+                        : const Color(0xFF1A4D2E).withOpacity(0.06),
+                    borderRadius: BorderRadius.circular(14)),
+                child: Center(
+                    child: Icon(iconData,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? AppColors.primaryGreenMint
+                            : const Color(0xFF1A4D2E),
+                        size: 20)),
               ),
               const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, fontFamily: 'Poppins', color: Color(0xFF1A4D2E)), maxLines: 1, overflow: TextOverflow.ellipsis),
+                    Text(title,
+                        style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            fontFamily: 'Poppins',
+                            color:
+                                Theme.of(context).textTheme.titleLarge?.color ??
+                                    const Color(0xFF1A4D2E)),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis),
                     const SizedBox(height: 4),
-                    Text(category, style: const TextStyle(fontSize: 11, color: AppColors.textSecondary, fontFamily: 'Poppins', fontWeight: FontWeight.w500)),
+                    Text(category,
+                        style: const TextStyle(
+                            fontSize: 11,
+                            color: AppColors.textSecondary,
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.w500)),
                   ],
                 ),
               ),
               const SizedBox(width: 8),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF4FC87A).withOpacity(0.1),
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.primaryGreenMint.withOpacity(0.15)
+                      : const Color(0xFF4FC87A).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Text('+${points.toInt()} pts', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF1A4D2E), fontFamily: 'Poppins')),
+                child: Text('+${points.toInt()} pts',
+                    style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? AppColors.primaryGreenMint
+                            : const Color(0xFF1A4D2E),
+                        fontFamily: 'Poppins')),
               ),
             ],
           ),
@@ -629,10 +934,21 @@ class _StatCard extends StatelessWidget {
   final bool large;
   final String? tooltip;
 
-  const _StatCard({super.key, required this.icon, required this.title, required this.value, required this.color, required this.large, this.tooltip});
+  const _StatCard(
+      {super.key,
+      required this.icon,
+      required this.title,
+      required this.value,
+      required this.color,
+      required this.large,
+      this.tooltip});
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final subtitleColor =
+        isDark ? AppColors.textMuted : AppColors.textSecondary;
+
     return Tooltip(
       message: tooltip ?? '',
       triggerMode: TooltipTriggerMode.tap,
@@ -643,17 +959,27 @@ class _StatCard extends StatelessWidget {
         color: const Color(0xFF1A4D2E).withOpacity(0.9),
         borderRadius: BorderRadius.circular(12),
       ),
-      textStyle: const TextStyle(color: Colors.white, fontFamily: 'Poppins', fontSize: 12),
+      textStyle: const TextStyle(
+          color: Colors.white, fontFamily: 'Poppins', fontSize: 12),
       child: Container(
         // Menyesuaikan tinggi agar card besar (184) dan dua card kecil (84*2 + jarak 16) persis sama (184 = 184)
         height: large ? 184 : 84,
         padding: EdgeInsets.all(large ? 20 : 12),
         decoration: BoxDecoration(
-          color: Colors.white,
+          // FIX: Use explicit white in light mode instead of cardColor
+          // which in Material 3 fromSeed can be nearly identical to scaffold bg.
+          color: isDark ? Theme.of(context).cardColor : Colors.white,
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
-            BoxShadow(color: color.withOpacity(0.1), blurRadius: 16, offset: const Offset(0, 6)),
-            BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 4, offset: const Offset(0, 2)),
+            BoxShadow(
+                color: color.withOpacity(isDark ? 0.2 : 0.1),
+                blurRadius: 16,
+                offset: const Offset(0, 6)),
+            if (!isDark)
+              BoxShadow(
+                  color: Colors.black.withOpacity(0.02),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2)),
           ],
         ),
         child: large
@@ -666,14 +992,21 @@ class _StatCard extends StatelessWidget {
                     children: [
                       Container(
                         padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle),
+                        decoration: BoxDecoration(
+                            color: color.withOpacity(isDark ? 0.2 : 0.1),
+                            shape: BoxShape.circle),
                         child: Icon(icon, color: color, size: 24),
                       ),
                       Row(
                         children: [
-                          if (tooltip != null) Icon(LucideIcons.info, color: color.withOpacity(0.4), size: 16),
+                          if (tooltip != null)
+                            Icon(LucideIcons.info,
+                                color: color.withOpacity(isDark ? 0.6 : 0.4),
+                                size: 16),
                           const SizedBox(width: 6),
-                          Icon(LucideIcons.arrowUpRight, color: color.withOpacity(0.3), size: 20),
+                          Icon(LucideIcons.arrowUpRight,
+                              color: color.withOpacity(isDark ? 0.5 : 0.3),
+                              size: 20),
                         ],
                       ),
                     ],
@@ -681,9 +1014,20 @@ class _StatCard extends StatelessWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(value, style: TextStyle(fontSize: 32, fontWeight: FontWeight.w800, color: color, fontFamily: 'Poppins', height: 1.1)),
+                      Text(value,
+                          style: TextStyle(
+                              fontSize: 32,
+                              fontWeight: FontWeight.w800,
+                              color: color,
+                              fontFamily: 'Poppins',
+                              height: 1.1)),
                       const SizedBox(height: 4),
-                      Text(title, style: const TextStyle(fontSize: 13, color: AppColors.textSecondary, fontFamily: 'Poppins', fontWeight: FontWeight.w500)),
+                      Text(title,
+                          style: TextStyle(
+                              fontSize: 13,
+                              color: subtitleColor,
+                              fontFamily: 'Poppins',
+                              fontWeight: FontWeight.w500)),
                     ],
                   ),
                 ],
@@ -692,7 +1036,9 @@ class _StatCard extends StatelessWidget {
                 children: [
                   Container(
                     padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(14)),
+                    decoration: BoxDecoration(
+                        color: color.withOpacity(isDark ? 0.2 : 0.1),
+                        borderRadius: BorderRadius.circular(14)),
                     child: Icon(icon, color: color, size: 18),
                   ),
                   const SizedBox(width: 12),
@@ -701,13 +1047,25 @@ class _StatCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: color, fontFamily: 'Poppins', height: 1.1)),
-                        Text(title, style: const TextStyle(fontSize: 11, color: AppColors.textSecondary, fontFamily: 'Poppins', fontWeight: FontWeight.w500)),
+                        Text(value,
+                            style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w800,
+                                color: color,
+                                fontFamily: 'Poppins',
+                                height: 1.1)),
+                        Text(title,
+                            style: TextStyle(
+                                fontSize: 11,
+                                color: subtitleColor,
+                                fontFamily: 'Poppins',
+                                fontWeight: FontWeight.w500)),
                       ],
                     ),
                   ),
                   if (tooltip != null)
-                    Icon(LucideIcons.info, color: color.withOpacity(0.3), size: 14),
+                    Icon(LucideIcons.info,
+                        color: color.withOpacity(isDark ? 0.5 : 0.3), size: 14),
                 ],
               ),
       ),

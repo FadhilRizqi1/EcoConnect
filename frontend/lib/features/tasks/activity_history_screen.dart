@@ -93,21 +93,21 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7F5),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor ?? Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(LucideIcons.arrowLeft, color: Color(0xFF1A4D2E)),
+          icon: Icon(LucideIcons.arrowLeft, color: Theme.of(context).textTheme.titleLarge?.color),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: Text(
           'Riwayat Aktivitas',
-          style: TextStyle(color: Color(0xFF1A4D2E), fontWeight: FontWeight.w800, fontFamily: 'Poppins', fontSize: 18),
+          style: TextStyle(color: Theme.of(context).textTheme.titleLarge?.color, fontWeight: FontWeight.w800, fontFamily: 'Poppins', fontSize: 18),
         ),
         actions: [
           IconButton(
-            icon: const Icon(LucideIcons.refreshCw, color: Color(0xFF1A4D2E), size: 20),
+            icon: Icon(LucideIcons.refreshCw, color: Theme.of(context).textTheme.titleLarge?.color, size: 20),
             onPressed: _load,
           ),
         ],
@@ -230,10 +230,10 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
               margin: const EdgeInsets.only(right: 8),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: isSelected ? const Color(0xFF1A4D2E) : Colors.white,
+                color: isSelected ? (Theme.of(context).brightness == Brightness.dark ? AppColors.primaryGreenMint : const Color(0xFF1A4D2E)) : Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(20),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8)],
-                border: Border.all(color: isSelected ? const Color(0xFF1A4D2E) : Colors.transparent),
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(Theme.of(context).brightness == Brightness.dark ? 0 : 0.05), blurRadius: 8)],
+                border: Border.all(color: isSelected ? (Theme.of(context).brightness == Brightness.dark ? AppColors.primaryGreenMint : const Color(0xFF1A4D2E)) : Colors.transparent),
               ),
               child: Text(
                 cat,
@@ -264,10 +264,10 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(20),
         border: isPremium ? Border.all(color: AppColors.accentAmber.withOpacity(0.4), width: 1.5) : null,
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4))],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(Theme.of(context).brightness == Brightness.dark ? 0 : 0.03), blurRadius: 10, offset: const Offset(0, 4))],
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -294,7 +294,7 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
                       Expanded(
                         child: Text(
                           log['title']?.toString() ?? 'Aksi Hijau',
-                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, fontFamily: 'Poppins', color: Color(0xFF1A2E1E)),
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, fontFamily: 'Poppins', color: Theme.of(context).textTheme.titleLarge?.color ?? const Color(0xFF1A2E1E)),
                         ),
                       ),
                       if (isPremium)
@@ -323,7 +323,7 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF4F7F5),
+                        color: Theme.of(context).scaffoldBackgroundColor,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(
@@ -362,7 +362,7 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
           const SizedBox(height: 16),
           Text(
             _selectedFilter == 'Semua' ? 'Belum ada aktivitas' : 'Belum ada aktivitas $_selectedFilter',
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFF1A4D2E), fontFamily: 'Poppins'),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Theme.of(context).textTheme.titleLarge?.color ?? const Color(0xFF1A4D2E), fontFamily: 'Poppins'),
           ),
           const SizedBox(height: 8),
           const Text('Lakukan check-in pertamamu!', style: TextStyle(color: AppColors.textSecondary, fontFamily: 'Poppins')),
