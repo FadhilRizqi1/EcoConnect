@@ -35,9 +35,10 @@ class MainShell extends StatelessWidget {
     final leftIndex = _currentIndex(context, _leftTabs);
     final rightIndex = _currentIndex(context, _rightTabs);
     final isFabActive = GoRouterState.of(context).matchedLocation.startsWith('/tugas');
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7F5),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       extendBody: true, // This allows the body to flow underneath the BottomAppBar, filling the notch area
       body: child,
       // Fitts's Law: Core action (Check-in) is prominent and easy to reach.
@@ -86,7 +87,9 @@ class MainShell extends StatelessWidget {
       
       // Glassmorphism-inspired Bottom App Bar
       bottomNavigationBar: BottomAppBar(
-        color: Colors.white,
+        // FIX: Explicit white in light mode — cardColor in Material 3 fromSeed
+        // can be a tonal surface nearly identical to the scaffold background.
+        color: isDark ? Theme.of(context).cardColor : Colors.white,
         shape: const CircularNotchedRectangle(),
         notchMargin: 8,
         elevation: 8,
@@ -121,7 +124,10 @@ class MainShell extends StatelessWidget {
   }
 
   Widget _buildTabItem(BuildContext context, _TabItem tab, bool isActive) {
-    final color = isActive ? const Color(0xFF1A4D2E) : const Color(0xFF9E9E9E); // Deep Green vs Soft Grey
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final activeColor = isDark ? AppColors.primaryGreenMint : const Color(0xFF1A4D2E);
+    final inactiveColor = isDark ? AppColors.textMuted : const Color(0xFF9E9E9E);
+    final color = isActive ? activeColor : inactiveColor;
     
     return Expanded(
       child: InkWell(
@@ -133,7 +139,7 @@ class MainShell extends StatelessWidget {
           curve: Curves.easeOut,
           padding: const EdgeInsets.symmetric(vertical: 4), // Dihapus horizontal padding agar fit
           decoration: BoxDecoration(
-            color: isActive ? const Color(0xFF1A4D2E).withOpacity(0.08) : Colors.transparent,
+            color: isActive ? activeColor.withOpacity(isDark ? 0.15 : 0.08) : Colors.transparent,
             borderRadius: BorderRadius.circular(16),
           ),
           child: Column(
