@@ -1,12 +1,15 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/constants/app_constants.dart';
 import '../../services/api_service.dart';
 import '../../services/auth_service.dart';
 
 class RegisterScreen extends StatefulWidget {
-  const RegisterScreen({super.key});
+  final List<String>? initialCategories;
+  const RegisterScreen({super.key, this.initialCategories});
   @override
   State<RegisterScreen> createState() => _RegisterScreenState();
 }
@@ -15,10 +18,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _nameCtrl     = TextEditingController();
   final _emailCtrl    = TextEditingController();
   final _passwordCtrl = TextEditingController();
-  String? _selectedCategory;
+  List<String> _selectedCategories = [];
   bool _loading = false;
   bool _obscure = true;
   String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialCategories != null) {
+      _selectedCategories.addAll(widget.initialCategories!);
+    }
+  }
 
   Future<void> _register() async {
     final name = _nameCtrl.text.trim();
@@ -34,7 +45,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         nama: name,
         email: email,
         password: password,
-        kategori: _selectedCategory ?? '',
+        kategori: _selectedCategories.join(', '),
       );
       await AuthService.saveToken(data['token']);
       final userId = data['user']['id'];
@@ -52,70 +63,117 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 8),
-                IconButton(
-                  icon: const Icon(Icons.arrow_back_ios_rounded, color: Colors.white),
-                  onPressed: () => context.go('/masuk'),
-                ),
-                const SizedBox(height: 8),
-                const Text('🌱', style: TextStyle(fontSize: 52)),
-                const SizedBox(height: 12),
-                const Text('Buat Akun\nEco-Warrior!', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: Colors.white, fontFamily: 'Poppins', height: 1.2)),
-                const SizedBox(height: 6),
-                const Text('Bergabunglah dan selamatkan bumi bersama kami', style: TextStyle(color: Colors.white70, fontFamily: 'Poppins', fontSize: 13)),
-                const SizedBox(height: 32),
+      extendBodyBehindAppBar: true,
+      resizeToAvoidBottomInset: true,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          Container(
+            decoration: const BoxDecoration(gradient: AppColors.darkGradient),
+          ),
+          SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(32),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+                    child: Container(
+                      padding: const EdgeInsets.all(28),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(32),
+                        border: Border.all(color: Colors.white.withOpacity(0.3), width: 1.5),
+                        boxShadow: [
+                          BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 24, spreadRadius: -5)
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.arrow_back_ios_rounded, color: Colors.white),
+                                onPressed: () => context.go('/masuk'),
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                              ),
+                              const Spacer(),
+                              const Text('🌱', style: TextStyle(fontSize: 32)),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          const Text('Buat Akun\nEco-Warrior!', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: Colors.white, fontFamily: 'Poppins', height: 1.2)),
+                          const SizedBox(height: 8),
+                          const Text('Bergabunglah dan selamatkan bumi bersama kami', style: TextStyle(color: Colors.white70, fontFamily: 'Poppins', fontSize: 13)),
+                          const SizedBox(height: 28),
 
-                _buildField(controller: _nameCtrl,  label: 'Nama Lengkap', icon: Icons.person_rounded),
+                _buildField(controller: _nameCtrl,  label: 'Nama Lengkap', icon: LucideIcons.user),
                 const SizedBox(height: 14),
-                _buildField(controller: _emailCtrl, label: 'Email', icon: Icons.email_rounded, keyboardType: TextInputType.emailAddress),
+                _buildField(controller: _emailCtrl, label: 'Email', icon: LucideIcons.mail, keyboardType: TextInputType.emailAddress),
                 const SizedBox(height: 14),
                 _buildField(
                   controller: _passwordCtrl,
                   label: 'Kata Sandi (min. 6 karakter)',
-                  icon: Icons.lock_rounded,
+                  icon: LucideIcons.lock,
                   obscure: _obscure,
                   suffix: IconButton(
-                    icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility, color: Colors.white70),
+                    icon: Icon(_obscure ? LucideIcons.eyeOff : LucideIcons.eye, color: Colors.white.withOpacity(0.7), size: 20),
                     onPressed: () => setState(() => _obscure = !_obscure),
                   ),
                 ),
 
                 const SizedBox(height: 22),
-                const Text('Fokus Hijaumu (pilih 1)', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600, fontFamily: 'Poppins')),
+                const Text('Fokus Hijaumu (pilih satu atau lebih)', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600, fontFamily: 'Poppins')),
                 const SizedBox(height: 10),
 
-                // Hick's Law: max 5 kategori
+                // Multi-select kategori
                 Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
+                  spacing: 12,
+                  runSpacing: 12,
                   children: AppConstants.kategoriOnboarding.map((cat) {
-                    final isSelected = _selectedCategory == cat['nama'];
+                    final isSelected = _selectedCategories.contains(cat['nama']);
                     return GestureDetector(
-                      onTap: () => setState(() => _selectedCategory = cat['nama']),
+                      onTap: () {
+                        setState(() {
+                          if (isSelected) {
+                            _selectedCategories.remove(cat['nama']);
+                          } else {
+                            _selectedCategories.add(cat['nama']!);
+                          }
+                        });
+                      },
                       child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 180),
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        duration: const Duration(milliseconds: 200),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         decoration: BoxDecoration(
-                          color: isSelected ? Colors.white : Colors.white.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: isSelected ? Colors.white : Colors.white.withOpacity(0.3)),
-                        ),
-                        child: Text(
-                          '${cat['emoji']} ${cat['nama']}',
-                          style: TextStyle(
-                            color: isSelected ? AppColors.primaryGreen : Colors.white,
-                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                            fontFamily: 'Poppins',
-                            fontSize: 13,
+                          color: isSelected ? Colors.white : Colors.white.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: isSelected ? Colors.white : Colors.white.withOpacity(0.2),
+                            width: 1.5,
                           ),
+                          boxShadow: isSelected ? [
+                            BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4))
+                          ] : [],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(cat['emoji']!, style: const TextStyle(fontSize: 18)),
+                            const SizedBox(width: 8),
+                            Text(
+                              cat['nama']!,
+                              style: TextStyle(
+                                color: isSelected ? AppColors.primaryGreen : Colors.white,
+                                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                                fontFamily: 'Poppins',
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     );
@@ -141,26 +199,51 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
                     foregroundColor: AppColors.primaryGreen,
-                    minimumSize: const Size(double.infinity, 58),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                    minimumSize: const Size(double.infinity, 56),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                     elevation: 0,
                   ),
                   child: _loading
-                      ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(color: AppColors.primaryGreen, strokeWidth: 2.5))
-                      : const Text('Daftar & Mulai Misi 🌿', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, fontFamily: 'Poppins')),
+                      ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: AppColors.primaryGreen, strokeWidth: 2.5))
+                      : const FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text('Daftar & Mulai Misi 🌿', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, fontFamily: 'Poppins')),
+                              SizedBox(width: 8),
+                              Icon(LucideIcons.arrowRight, size: 20),
+                            ],
+                          ),
+                        ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 24),
                 Center(
-                  child: TextButton(
-                    onPressed: () => context.go('/masuk'),
-                    child: const Text('Sudah punya akun? Masuk', style: TextStyle(color: Colors.white70, fontFamily: 'Poppins', fontSize: 13)),
+                  child: GestureDetector(
+                    onTap: () => context.go('/masuk'),
+                    child: RichText(
+                      text: TextSpan(
+                        text: 'Sudah punya akun? ',
+                        style: TextStyle(color: Colors.white.withOpacity(0.8), fontFamily: 'Poppins', fontSize: 13),
+                        children: const [
+                          TextSpan(
+                            text: 'Masuk di sini',
+                            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
-                const SizedBox(height: 20),
               ],
             ),
           ),
         ),
+      ),
+    ),
+  ),
+),
+        ],
       ),
     );
   }
@@ -173,13 +256,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
       style: const TextStyle(color: Colors.white, fontFamily: 'Poppins'),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(color: Colors.white70, fontFamily: 'Poppins'),
-        prefixIcon: Icon(icon, color: Colors.white70),
+        labelStyle: TextStyle(color: Colors.white.withOpacity(0.7), fontFamily: 'Poppins'),
+        prefixIcon: Icon(icon, color: Colors.white.withOpacity(0.7), size: 20),
         suffixIcon: suffix,
         filled: true,
-        fillColor: Colors.white.withOpacity(0.15),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Colors.white, width: 1.5)),
+        fillColor: Colors.white.withOpacity(0.1),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: Colors.white, width: 1.5)),
+        contentPadding: const EdgeInsets.symmetric(vertical: 18),
       ),
     );
   }

@@ -12,7 +12,7 @@ class OnboardingScreen extends StatefulWidget {
 }
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
-  String? _selectedCategory;
+  List<String> _selectedCategories = [];
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +40,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  'Pilih fokus ramah lingkunganmu:',
+                  'Pilih satu atau lebih fokus ramah lingkunganmu:',
                   style: TextStyle(color: Colors.white60, fontSize: 15, fontFamily: 'Poppins'),
                 ),
                 const SizedBox(height: 24),
@@ -52,21 +52,32 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     separatorBuilder: (_, __) => const SizedBox(height: 12),
                     itemBuilder: (context, i) {
                       final cat = AppConstants.kategoriOnboarding[i];
-                      final isSelected = _selectedCategory == cat['nama'];
+                      final isSelected = _selectedCategories.contains(cat['nama']);
                       return GestureDetector(
-                        onTap: () => setState(() => _selectedCategory = cat['nama']),
+                        onTap: () {
+                          setState(() {
+                            if (isSelected) {
+                              _selectedCategories.remove(cat['nama']);
+                            } else {
+                              _selectedCategories.add(cat['nama']!);
+                            }
+                          });
+                        },
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 200),
-                          padding: const EdgeInsets.all(18),
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                           decoration: BoxDecoration(
                             color: isSelected
-                                ? AppColors.primaryGreen.withOpacity(0.3)
-                                : AppColors.cardDark,
-                            borderRadius: BorderRadius.circular(18),
+                                ? Colors.white
+                                : Colors.white.withOpacity(0.05),
+                            borderRadius: BorderRadius.circular(20),
                             border: Border.all(
-                              color: isSelected ? AppColors.primaryGreenMint : Colors.transparent,
-                              width: 2,
+                              color: isSelected ? Colors.white : Colors.white.withOpacity(0.15),
+                              width: 1.5,
                             ),
+                            boxShadow: isSelected ? [
+                              BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4))
+                            ] : [],
                           ),
                           child: Row(
                             children: [
@@ -79,21 +90,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                     Text(
                                       cat['nama']!,
                                       style: TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                        color: isSelected ? AppColors.primaryGreenMint : Colors.white,
+                                        fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                                        color: isSelected ? AppColors.primaryGreen : Colors.white,
                                         fontFamily: 'Poppins',
-                                        fontSize: 15,
+                                        fontSize: 16,
                                       ),
                                     ),
+                                    const SizedBox(height: 4),
                                     Text(
                                       cat['deskripsi']!,
-                                      style: const TextStyle(color: Colors.white54, fontSize: 12, fontFamily: 'Poppins'),
+                                      style: TextStyle(color: isSelected ? AppColors.textSecondary : Colors.white60, fontSize: 12, fontFamily: 'Poppins'),
                                     ),
                                   ],
                                 ),
                               ),
                               if (isSelected)
-                                const Icon(Icons.check_circle, color: AppColors.primaryGreenMint),
+                                const Icon(Icons.check_circle, color: AppColors.primaryGreen, size: 28),
                             ],
                           ),
                         ),
@@ -105,18 +117,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 const SizedBox(height: 16),
                 // Fitts's Law: Large CTA at the bottom, thumb-reachable
                 ElevatedButton(
-                  onPressed: _selectedCategory != null
-                      ? () => context.go('/daftar', extra: _selectedCategory)
+                  onPressed: _selectedCategories.isNotEmpty
+                      ? () => context.go('/daftar', extra: _selectedCategories)
                       : null,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryGreenMint,
-                    foregroundColor: AppColors.backgroundDark,
+                    backgroundColor: Colors.white,
+                    foregroundColor: AppColors.primaryGreen,
                     minimumSize: const Size(double.infinity, 58),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                    elevation: 0,
                   ),
                   child: const Text(
                     'Mulai Perjalanan Hijauku 🌱',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, fontFamily: 'Poppins'),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, fontFamily: 'Poppins'),
                   ),
                 ),
                 const SizedBox(height: 12),
