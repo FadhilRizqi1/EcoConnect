@@ -130,10 +130,10 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   Widget _build3DPodium() {
     // Array order: Rank 2 (Left), Rank 1 (Center), Rank 3 (Right)
     final order = [1, 0, 2]; 
-    final heights = [140.0, 190.0, 110.0];
+    final heights = [190.0, 140.0, 110.0];
     final colors = [
-      const Color(0xFFE0E0E0), // Silver
       const Color(0xFFFFB03A), // Gold
+      const Color(0xFFE0E0E0), // Silver
       const Color(0xFFCD7F32), // Bronze
     ];
 
@@ -269,38 +269,38 @@ class _LeaderboardRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isMe ? const Color(0xFF4FC87A).withOpacity(0.1) : Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: isMe ? Border.all(color: const Color(0xFF4FC87A), width: 1.5) : Border.all(color: Colors.transparent),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))],
-      ),
-      child: Row(
-        children: [
-          // Rank Badge
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: isMe ? const Color(0xFF4FC87A) : const Color(0xFF1A4D2E).withOpacity(0.06),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Center(
-              child: Text(
-                '$rank',
-                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: isMe ? Colors.white : const Color(0xFF1A4D2E), fontFamily: 'Poppins'),
+    return GestureDetector(
+      onTap: () => context.push('/profil/${user['id']}'),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isMe ? const Color(0xFF4FC87A).withOpacity(0.1) : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: isMe ? Border.all(color: const Color(0xFF4FC87A), width: 1.5) : Border.all(color: Colors.transparent),
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))],
+        ),
+        child: Row(
+          children: [
+            // Rank Badge
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: isMe ? const Color(0xFF4FC87A) : const Color(0xFF1A4D2E).withOpacity(0.06),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Center(
+                child: Text(
+                  '$rank',
+                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: isMe ? Colors.white : const Color(0xFF1A4D2E), fontFamily: 'Poppins'),
+                ),
               ),
             ),
-          ),
-          const SizedBox(width: 16),
-          
-          // Avatar
-          GestureDetector(
-            onTap: () => context.push('/profil/${user['id']}'),
-            child: Container(
+            const SizedBox(width: 16),
+            
+            // Avatar
+            Container(
               width: 44,
               height: 44,
               decoration: BoxDecoration(
@@ -318,8 +318,7 @@ class _LeaderboardRow extends StatelessWidget {
                 ),
               ) : null,
             ),
-          ),
-          const SizedBox(width: 14),
+            const SizedBox(width: 14),
           
           // Info
           Expanded(
@@ -354,6 +353,6 @@ class _LeaderboardRow extends StatelessWidget {
           ),
         ],
       ),
-    );
+    ));
   }
 }
