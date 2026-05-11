@@ -30,7 +30,7 @@
   - [1. Clone & Configure](#1-clone--configure)
   - [2. Database Setup (Supabase)](#2-database-setup-supabase)
   - [3. Run Backend](#3-run-backend)
-  - [4. Run Frontend](#4-run-frontend)
+  - [4. Run Frontend](#4-run-frontend-choose-method)
 - [🗺️ API Endpoints](#️-api-endpoints)
 - [🎨 Design System](#-design-system)
 - [🧠 UX Principles Applied](#-ux-principles-applied)
@@ -42,10 +42,11 @@
 
 **EcoConnect** is a full-stack application that motivates users to adopt eco-friendly habits through:
 
-- **Gamification 2.0** — Reputation points, badges, and a **3D Podium Leaderboard**.
-- **Community Hub** — Real-time forums categorized by environmental focus with auto-joining logic.
+- **Gamification 3.0** — Advanced 8-Rank progression system, reputation points, badges, and a **dynamic 3D Podium Leaderboard**.
+- **Community Hub** — Real-time forums categorized by environmental focus with authentic member counts.
 - **Premium Missions** — Specialized high-impact tasks with exclusive UI and rewards.
 - **Impact Tracking** — Detailed history of CO₂ savings and points with rich visual summaries.
+- **Modern Aesthetic** — Glassmorphism, mesh gradients, and a sleek, spotlight-driven center-docked navigation cradle.
 
 ---
 
@@ -61,6 +62,21 @@
 | 💬 **Community Forum** | Real-time chat per category with auto-join upon onboarding | ✅ |
 | 🏆 **Leaderboard** | Top users with **3D Visual Podium** design | ✅ |
 | 🌱 **Onboarding** | Multi-category selection (Hick's Law) with community integration | ✅ |
+
+---
+
+## 🥇 8-Rank Gamification System
+
+EcoConnect implements a highly balanced, 8-tier progression system to keep users engaged. Every eco-action grants Reputation Points that contribute to level progression:
+
+1. 🌱 **Tunas** (0 pts) - The journey begins here.
+2. 🌿 **Bibit** (100 pts) - A sprouting commitment.
+3. 🍃 **Daun Hijau** (300 pts) - Growing awareness.
+4. 🌳 **Pohon** (700 pts) - Strong foundation.
+5. 🛡️ **Pengawal Alam** (1500 pts) - Guarding the ecosystem.
+6. 🌍 **Pelindung Bumi** (3000 pts) - Earth's protector.
+7. ⚔️ **Ksatria Ekologi** (6000 pts) - Elite green warrior.
+8. 👑 **Titan Hijau** (10000 pts) - The ultimate eco-champion.
 
 ---
 
@@ -264,51 +280,56 @@ go run main.go
 
 ---
 
-### 4. Run Frontend
+### 4. Run Frontend (Choose Method)
 
-Open a **new terminal** (do not close the backend terminal):
+Open a **new terminal** (do not close the backend terminal), navigate to the `frontend/` folder and run `flutter pub get`. After that, choose one of the following methods:
 
+#### 💻 Method A: Chrome / Edge Browser (Web)
+*Best for quick UI testing without an emulator/device.*
 ```bash
-# From EcoConnect/ root, navigate to the frontend folder
-cd frontend
-
-# Download Flutter dependencies
-flutter pub get
-
-# Run on Chrome (Flutter Web)
 flutter run -d chrome
-
-# Alternative: run on Android emulator
-flutter run -d android
-
-# Alternative: build for web
-flutter build web
+# or
+flutter run -d edge
 ```
 
-**Expected output:**
-```
-Launching lib/main.dart on Chrome in debug mode...
-...
-🔥 To hot reload changes while running, press "r". 
-```
-
-The app will automatically open in the Chrome browser.
-
----
-
-### 🔄 Development Workflow
-
+#### 📱 Method B: Android Emulator / iOS Simulator
+*Best for testing native mobile experiences.*
+1. Open Android Studio and launch your AVD (Emulator).
+2. Run the command:
 ```bash
-# Terminal 1: Backend (manual auto-reload)
-cd backend && go run main.go
-
-# Terminal 2: Frontend (automatic hot reload)
-cd frontend && flutter run -d chrome
-
-# Hot reload Flutter when code changes:
-# Press 'r' in the Flutter terminal
-# Press 'R' for a full hot restart
+flutter run
 ```
+*(Select your emulator from the list if prompted).*
+
+#### 🔌 Method C: Physical Device (USB Debugging)
+*Highly recommended for testing native animation performance.*
+1. Enable **Developer Options** and **USB Debugging** on your phone.
+2. Connect your phone to the PC via a USB cable.
+3. Ensure it is detected by running `flutter devices`.
+4. Run the application:
+```bash
+flutter run -d <your-device-id>
+```
+
+#### 🛜 Method D: Physical Device via Wi-Fi (Wireless Debugging)
+*Best if you prefer testing without cables.*
+1. Ensure both your PC and phone are connected to the **same Wi-Fi network**.
+2. **Android 11+:** Open Developer Options -> **Wireless Debugging** -> "Pair device with pairing code".
+3. In your PC terminal, run:
+```bash
+adb pair <IP_ADDRESS>:<PORT>
+```
+4. Enter the pairing code from your phone.
+5. Connect to the device using the debugging port:
+```bash
+adb connect <IP_ADDRESS>:<DEBUG_PORT>
+```
+6. Run the Flutter application:
+```bash
+flutter run
+```
+
+> **🔥 Hot Reload:** While the application is running in the terminal, press **`r`** to instantly see your code changes, or **`R`** to fully restart the application.
 
 ---
 
