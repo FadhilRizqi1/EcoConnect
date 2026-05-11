@@ -64,6 +64,7 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       useSafeArea: true,
+      useRootNavigator: true,
       builder: (ctx) => _CheckInSheet(
         action: action,
         onSuccess: (result) {
