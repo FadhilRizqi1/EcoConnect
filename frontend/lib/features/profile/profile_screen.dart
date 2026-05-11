@@ -8,6 +8,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/theme/theme_provider.dart';
 import '../../services/api_service.dart';
 import '../../services/auth_service.dart';
+import '../../widgets/main_shell.dart';
 
 class ProfileScreen extends StatefulWidget {
   final int userId;
@@ -250,6 +251,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _showEditProfileSheet() {
+    MainShell.setNavigationHidden(true);
     showModalBottomSheet(
         context: context,
         isScrollControlled: true,
@@ -490,7 +492,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             );
           });
-        });
+        }).whenComplete(() {
+      MainShell.setNavigationHidden(false);
+    });
   }
 
   @override

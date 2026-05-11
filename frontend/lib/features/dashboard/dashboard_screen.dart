@@ -6,6 +6,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/utils/rank_helper.dart';
 import '../../services/api_service.dart';
 import '../../services/auth_service.dart';
+import '../../widgets/main_shell.dart';
 import '../tasks/tasks_screen.dart' show dashboardRefreshNotifier;
 import 'widgets/premium_progress_menu.dart';
 
@@ -36,12 +37,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   void _showPremiumSubMenu(BuildContext context) {
     if (_profile == null) return;
+    MainShell.setNavigationHidden(true);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => PremiumProgressMenu(userProfile: _profile!),
-    );
+    ).whenComplete(() {
+      MainShell.setNavigationHidden(false);
+    });
   }
 
   @override

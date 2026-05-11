@@ -1,7 +1,3 @@
-/// EcoConnect API Service — Centralized HTTP layer
-/// Handles ALL requests to the Go backend (http://localhost:8080)
-/// Postel's Law: lenient in reading, strict in sending
-
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../core/constants/app_constants.dart';

@@ -207,15 +207,19 @@ class _CommunityChatScreenState extends State<CommunityChatScreen> {
     return int.tryParse(v.toString());
   }
 
-  static String _initial(String? name) {
-    final n = name?.trim() ?? '';
-    return n.isNotEmpty ? n[0].toUpperCase() : '?';
-  }
-
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primaryTextColor =
+        theme.textTheme.bodyLarge?.color ?? AppColors.textPrimary;
+    final secondaryTextColor =
+        isDark ? AppColors.textMuted : AppColors.textSecondary;
+    final mutedTextColor =
+        isDark ? AppColors.textOnDark.withOpacity(0.58) : AppColors.textMuted;
+
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: theme.scaffoldBackgroundColor,
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
         leading: IconButton(
@@ -236,12 +240,14 @@ class _CommunityChatScreenState extends State<CommunityChatScreen> {
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-            color: AppColors.primaryGreenSoft,
-            child: const Text(
-              '💬 Berdiskusi bersama memperkuat komitmen kita pada lingkungan!',
+            color: isDark
+                ? AppColors.primaryGreenMint.withOpacity(0.13)
+                : AppColors.primaryGreenSoft,
+            child: Text(
+              'Berdiskusi bersama memperkuat komitmen kita pada lingkungan!',
               style: TextStyle(
                   fontSize: 12,
-                  color: AppColors.primaryGreen,
+                  color: isDark ? AppColors.textOnDark : AppColors.primaryGreen,
                   fontFamily: 'Poppins'),
               textAlign: TextAlign.center,
             ),
@@ -267,8 +273,8 @@ class _CommunityChatScreenState extends State<CommunityChatScreen> {
                             color: AppColors.textMuted, size: 48),
                         const SizedBox(height: 12),
                         Text(_errorMsg,
-                            style: const TextStyle(
-                                color: AppColors.textSecondary,
+                            style: TextStyle(
+                                color: secondaryTextColor,
                                 fontFamily: 'Poppins'),
                             textAlign: TextAlign.center),
                         const SizedBox(height: 16),
@@ -284,30 +290,30 @@ class _CommunityChatScreenState extends State<CommunityChatScreen> {
                 );
               }
               if (!_isJoined) {
-                return const Center(
+                return Center(
                   child: Padding(
-                    padding: EdgeInsets.all(24),
+                    padding: const EdgeInsets.all(24),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.lock_outline_rounded,
+                        const Icon(Icons.lock_outline_rounded,
                             color: AppColors.textMuted, size: 48),
-                        SizedBox(height: 12),
+                        const SizedBox(height: 12),
                         Text(
                           'Forum hanya tersedia untuk anggota komunitas.',
                           style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w700,
                               fontFamily: 'Poppins',
-                              color: AppColors.textPrimary),
+                              color: primaryTextColor),
                           textAlign: TextAlign.center,
                         ),
-                        SizedBox(height: 4),
+                        const SizedBox(height: 4),
                         Text(
                           'Gabung komunitas terlebih dahulu untuk membaca dan mengirim pesan.',
                           style: TextStyle(
                               fontSize: 13,
-                              color: AppColors.textSecondary,
+                              color: secondaryTextColor,
                               fontFamily: 'Poppins'),
                           textAlign: TextAlign.center,
                         ),
@@ -317,23 +323,24 @@ class _CommunityChatScreenState extends State<CommunityChatScreen> {
                 );
               }
               if (_messages.isEmpty) {
-                return const Center(
+                return Center(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text('💬', style: TextStyle(fontSize: 48)),
-                      SizedBox(height: 12),
+                      const Icon(Icons.forum_outlined,
+                          color: AppColors.textMuted, size: 48),
+                      const SizedBox(height: 12),
                       Text('Belum ada pesan.',
                           style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
                               fontFamily: 'Poppins',
-                              color: AppColors.textPrimary)),
-                      SizedBox(height: 4),
+                              color: primaryTextColor)),
+                      const SizedBox(height: 4),
                       Text('Jadilah yang pertama berdiskusi!',
                           style: TextStyle(
                               fontSize: 13,
-                              color: AppColors.textSecondary,
+                              color: secondaryTextColor,
                               fontFamily: 'Poppins')),
                     ],
                   ),
@@ -367,10 +374,10 @@ class _CommunityChatScreenState extends State<CommunityChatScreen> {
               ? Container(
                   padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).cardColor,
+                    color: theme.cardColor,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.04),
+                        color: Colors.black.withOpacity(isDark ? 0.18 : 0.04),
                         blurRadius: 16,
                         offset: const Offset(0, -4),
                       ),
@@ -383,25 +390,47 @@ class _CommunityChatScreenState extends State<CommunityChatScreen> {
                           controller: _msgCtrl,
                           textInputAction: TextInputAction.send,
                           onSubmitted: (_) => _sendMessage(),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontFamily: 'Poppins',
                             fontSize: 14,
-                            color: Colors.black87,
+                            color: primaryTextColor,
                           ),
                           decoration: InputDecoration(
                             hintText: 'Tulis pesan...',
-                            hintStyle: const TextStyle(
-                                color: AppColors.textMuted,
+                            hintStyle: TextStyle(
+                                color: mutedTextColor,
                                 fontFamily: 'Poppins',
                                 fontSize: 14),
                             filled: true,
-                            fillColor:
-                                Theme.of(context).scaffoldBackgroundColor,
+                            fillColor: isDark
+                                ? AppColors.surfaceDark
+                                : theme.scaffoldBackgroundColor,
                             contentPadding: const EdgeInsets.symmetric(
                                 horizontal: 16, vertical: 10),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(24),
-                              borderSide: BorderSide.none,
+                              borderSide: BorderSide(
+                                color: isDark
+                                    ? Colors.white.withOpacity(0.08)
+                                    : Colors.transparent,
+                              ),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(24),
+                              borderSide: BorderSide(
+                                color: isDark
+                                    ? Colors.white.withOpacity(0.08)
+                                    : Colors.transparent,
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(24),
+                              borderSide: BorderSide(
+                                color: isDark
+                                    ? AppColors.primaryGreenMint
+                                    : AppColors.primaryGreen,
+                                width: 1.4,
+                              ),
                             ),
                           ),
                         ),
@@ -434,10 +463,10 @@ class _CommunityChatScreenState extends State<CommunityChatScreen> {
               : Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).cardColor,
+                    color: theme.cardColor,
                     boxShadow: [
                       BoxShadow(
-                          color: Colors.black.withOpacity(0.04),
+                          color: Colors.black.withOpacity(isDark ? 0.18 : 0.04),
                           blurRadius: 16,
                           offset: const Offset(0, -4)),
                     ],
@@ -493,6 +522,15 @@ class _ChatBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final initial = userName.isNotEmpty ? userName[0].toUpperCase() : '?';
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primaryTextColor =
+        theme.textTheme.bodyLarge?.color ?? AppColors.textPrimary;
+    final secondaryTextColor =
+        isDark ? AppColors.textMuted : AppColors.textSecondary;
+    final otherBubbleColor = isDark ? const Color(0xFF203826) : theme.cardColor;
+    final otherBubbleBorder =
+        isDark ? Colors.white.withOpacity(0.08) : const Color(0xFFE8F3EB);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
@@ -510,7 +548,9 @@ class _ChatBubble extends StatelessWidget {
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF0F5F1),
+                  color: isDark
+                      ? Colors.white.withOpacity(0.08)
+                      : const Color(0xFFF0F5F1),
                   shape: BoxShape.circle,
                   image: userAvatar.isNotEmpty
                       ? DecorationImage(
@@ -522,10 +562,12 @@ class _ChatBubble extends StatelessWidget {
                     ? Center(
                         child: Text(
                           initial,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w800,
-                            color: Color(0xFF1A4D2E),
+                            color: isDark
+                                ? AppColors.primaryGreenMint
+                                : const Color(0xFF1A4D2E),
                             fontFamily: 'Poppins',
                           ),
                         ),
@@ -550,10 +592,10 @@ class _ChatBubble extends StatelessWidget {
                         Flexible(
                           child: Text(
                             userName,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w700,
-                              color: AppColors.textSecondary,
+                              color: secondaryTextColor,
                               fontFamily: 'Poppins',
                             ),
                             overflow: TextOverflow.ellipsis,
@@ -564,14 +606,18 @@ class _ChatBubble extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFE8F3EB),
+                            color: isDark
+                                ? AppColors.primaryGreenMint.withOpacity(0.12)
+                                : const Color(0xFFE8F3EB),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(
                             userLevel,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 9,
-                              color: Color(0xFF1A4D2E),
+                              color: isDark
+                                  ? AppColors.primaryGreenMint
+                                  : const Color(0xFF1A4D2E),
                               fontWeight: FontWeight.w800,
                               fontFamily: 'Poppins',
                             ),
@@ -589,9 +635,7 @@ class _ChatBubble extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
-                    color: isMe
-                        ? const Color(0xFF1A4D2E)
-                        : Theme.of(context).cardColor,
+                    color: isMe ? const Color(0xFF1A4D2E) : otherBubbleColor,
                     borderRadius: BorderRadius.only(
                       topLeft: const Radius.circular(20),
                       topRight: const Radius.circular(20),
@@ -607,18 +651,14 @@ class _ChatBubble extends StatelessWidget {
                     ],
                     border: isMe
                         ? null
-                        : Border.all(
-                            color: const Color(0xFFE8F3EB), width: 1.5),
+                        : Border.all(color: otherBubbleBorder, width: 1.5),
                   ),
                   child: Text(
                     message,
                     style: TextStyle(
                       fontSize: 14,
                       height: 1.4,
-                      color: isMe
-                          ? Colors.white
-                          : (Theme.of(context).textTheme.bodyLarge?.color ??
-                              const Color(0xFF1A4D2E)),
+                      color: isMe ? Colors.white : primaryTextColor,
                       fontFamily: 'Poppins',
                       fontWeight: FontWeight.w500,
                     ),

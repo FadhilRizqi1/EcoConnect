@@ -1,11 +1,14 @@
-/// EcoConnect API Constants — All endpoints in Indonesian where possible
+// EcoConnect API Constants - All endpoints in Indonesian where possible
 
 class AppConstants {
   AppConstants._();
 
   // ── Base URL ─────────────────────────────────────────────────────
-  // Diganti ke IP laptop agar bisa diakses dari device fisik (Android/iOS)
-  static const String baseUrl = 'http://192.168.100.11:8080/api'; 
+  // Production API. Override with --dart-define=API_BASE_URL=... when needed.
+  static const String baseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'https://mafalqi-ecoconnect-backend.hf.space/api',
+  );
 
   // ── Auth ─────────────────────────────────────────────────────────
   static const String daftar = '$baseUrl/auth/daftar';
