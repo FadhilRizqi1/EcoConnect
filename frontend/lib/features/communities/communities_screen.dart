@@ -401,7 +401,7 @@ String _getNetworkImageForCategory(String category) {
   const map = {
     'Diet Vegan': 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=1080&auto=format&fit=crop', // Salad/Fresh food
     'Hemat Energi': 'https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?q=80&w=1080&auto=format&fit=crop', // Lightbulbs/Energy
-    'Transportasi Hijau': 'https://images.unsplash.com/photo-1519003300449-424ad0405076?q=80&w=1080&auto=format&fit=crop', // Bicycles in nature
+    'Transportasi Hijau': 'https://images.unsplash.com/photo-1485965120184-e220f721d03e?q=80&w=1080&auto=format&fit=crop', // Explicit Bicycle Image
     'Kelola Sampah': 'https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?q=80&w=1080&auto=format&fit=crop', // Recycling/Nature
     'Hemat Air': 'https://images.unsplash.com/photo-1437622368342-7a3d73a34c8f?q=80&w=1080&auto=format&fit=crop', // Clean water/river
   };
