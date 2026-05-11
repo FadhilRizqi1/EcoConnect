@@ -70,19 +70,18 @@ func main() {
 	// Register routes
 	routes.Setup(app)
 
-	// Start server
-// Start server
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = os.Getenv("APP_PORT")
-	}
+    // Start server
+    port := os.Getenv("PORT") 
+    if port == "" {
+        port = os.Getenv("APP_PORT") 
+    }
+    if port == "" {
+        port = "7860" 
+    }
 
-	if port == "" {
-		port = "8080"
-	}
-
-	log.Printf("🚀 EcoConnect API siap dijalankan di port: %s", port)
-	log.Fatal(app.Listen(fmt.Sprintf(":%s", port)))
+    log.Printf("🚀 EcoConnect API berjalan di port: %s", port)
+    
+    log.Fatal(app.Listen(fmt.Sprintf("0.0.0.0:%s", port)))
 }
 
 // customErrorHandler returns consistent Indonesian error messages
