@@ -15,8 +15,6 @@
 
 <br/>
 
-![EcoConnect Banner](https://img.shields.io/badge/🌍_Carbon_Tracking-✅_Action_Check--in-💬_Community_Chat-1B6B3A?style=flat-square)
-
 </div>
 
 ---
