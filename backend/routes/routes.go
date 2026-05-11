@@ -29,10 +29,13 @@ func Setup(app *fiber.App) {
 
 	// ── Profil & Papan Peringkat (Social Capital) ─────────────────
 	protected.Get("/profil/:id", handlers.GetProfile)
+	protected.Put("/profil", handlers.UpdateProfile)
 	protected.Get("/papan-peringkat", handlers.GetLeaderboard)
+	protected.Get("/riwayat", handlers.GetRiwayat)
 
 	// ── Komunitas (Community) ─────────────────────────────────────
 	protected.Get("/communities", handlers.GetCommunities)
+	protected.Post("/communities/:id/join", handlers.ToggleJoinCommunity)
 	protected.Get("/communities/:id/messages", handlers.GetCommunityMessages)
 	protected.Post("/communities/:id/messages", handlers.SendCommunityMessage)
 

@@ -9,7 +9,9 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 	"os"
+	"strings"
 )
 
 type RegisterInput struct {
@@ -67,6 +69,44 @@ func Register(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusConflict).JSON(fiber.Map{
 			"error": "Email sudah terdaftar",
 		})
+	}
+
+	// Auto-join community based on multiple categories
+	if user.Category != "" {
+		categories := strings.Split(user.Category, ",")
+		tagMap := map[string]string{
+			"Diet Vegan":         "Vegan",
+			"Hemat Energi":       "Energi",
+			"Transportasi Hijau": "Transportasi",
+			"Kelola Sampah":      "Sampah",
+			"Hemat Air":          "Air",
+		}
+		
+		for _, cat := range categories {
+			cat = strings.TrimSpace(cat)
+			if cat == "" {
+				continue
+			}
+
+			var community models.Community
+			searchStr := "%" + cat + "%"
+			if tag, ok := tagMap[cat]; ok {
+				searchStr = "%" + tag + "%"
+			}
+
+			if err := config.DB.Where("name LIKE ? OR category LIKE ?", searchStr, searchStr).First(&community).Error; err == nil {
+				// Prevent duplicate join if somehow repeated
+				var count int64
+				config.DB.Model(&models.CommunityMember{}).Where("community_id = ? AND user_id = ?", community.ID, user.ID).Count(&count)
+				if count == 0 {
+					config.DB.Create(&models.CommunityMember{
+						CommunityID: community.ID,
+						UserID:      user.ID,
+					})
+					config.DB.Model(&community).UpdateColumn("member_count", gorm.Expr("member_count + ?", 1))
+				}
+			}
+		}
 	}
 
 	token, err := utils.GenerateJWT(user.ID)

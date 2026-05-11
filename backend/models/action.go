@@ -79,3 +79,19 @@ type ChatMessage struct {
 	UpdatedAt time.Time      `json:"updated_at"`
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
 }
+
+// CommunityMember melacak siapa saja yang bergabung dengan komunitas (authentic member count)
+type CommunityMember struct {
+	gorm.Model
+	ID          uint   `gorm:"primaryKey;autoIncrement" json:"id"`
+	CommunityID uint   `gorm:"not null;index" json:"community_id"`
+	UserID      uint   `gorm:"not null;index" json:"user_id"`
+
+	// Relations
+	User      User      `gorm:"foreignKey:UserID" json:"user,omitempty"`
+	Community Community `gorm:"foreignKey:CommunityID" json:"community,omitempty"`
+
+	CreatedAt time.Time      `json:"created_at"`
+	UpdatedAt time.Time      `json:"updated_at"`
+	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
+}

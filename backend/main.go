@@ -38,6 +38,7 @@ func main() {
 		&models.UserActionLog{},
 		&models.Community{},
 		&models.ChatMessage{},
+		&models.CommunityMember{}, // Phase 3: Komunitas Member join table
 	); err != nil {
 		log.Fatalf("❌ AutoMigrate gagal: %v", err)
 	}
@@ -47,6 +48,7 @@ func main() {
 	seedDefaultTasks()
 	seedDefaultActions()
 	seedDefaultCommunities()
+	updatePremiumPoints() // Pastikan poin premium selalu 3x poin biasa
 
 	// Fiber app setup
 	app := fiber.New(fiber.Config{
@@ -144,6 +146,24 @@ func seedDefaultActions() {
 	}
 	config.DB.Create(&actions)
 	log.Println("⚡ Data aksi awal berhasil ditambahkan")
+}
+
+// updatePremiumPoints — pastikan misi premium selalu punya poin 3x lebih besar
+// Dijalankan setiap startup untuk auto-koreksi data lama
+func updatePremiumPoints() {
+	// Set poin premium ke nilai yang lebih tinggi secara eksplisit
+	updates := map[string]int{
+		"Kurangi Konsumsi Daging":   90,
+		"Bersepeda ke Tujuan":       30,
+		"Matikan Perangkat Standby": 35,
+		"Tampung Air Hujan":         60,
+	}
+	for title, pts := range updates {
+		config.DB.Model(&models.Action{}).
+			Where("title = ? AND is_premium = true", title).
+			Update("points", pts)
+	}
+	log.Println("⭐ Poin misi premium diperbarui")
 }
 
 // seedDefaultCommunities populates Community table (new model)

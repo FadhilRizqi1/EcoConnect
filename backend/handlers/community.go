@@ -11,6 +11,8 @@ import (
 // GetCommunities mengembalikan semua komunitas
 // GET /api/communities
 func GetCommunities(c *fiber.Ctx) error {
+	userID := c.Locals("user_id").(uint)
+
 	var communities []models.Community
 	query := config.DB.Order("member_count DESC")
 
@@ -22,11 +24,78 @@ func GetCommunities(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": "Gagal mengambil data komunitas"})
 	}
 
+	// Ambil daftar komunitas yang diikuti user
+	var joinedIDs []uint
+	config.DB.Model(&models.CommunityMember{}).Where("user_id = ?", userID).Pluck("community_id", &joinedIDs)
+
+	joinedMap := make(map[uint]bool)
+	for _, id := range joinedIDs {
+		joinedMap[id] = true
+	}
+
+	// Hitung jumlah member riil dari database (Authentic Count)
+	type MemberCount struct {
+		CommunityID uint
+		Count       int
+	}
+	var memberCounts []MemberCount
+	config.DB.Model(&models.CommunityMember{}).
+		Select("community_id, count(*) as count").
+		Group("community_id").
+		Scan(&memberCounts)
+
+	countMap := make(map[uint]int)
+	for _, mc := range memberCounts {
+		countMap[mc.CommunityID] = mc.Count
+	}
+
+	var response []fiber.Map
+	for _, comm := range communities {
+		response = append(response, fiber.Map{
+			"id":           comm.ID,
+			"name":         comm.Name,
+			"description":  comm.Description,
+			"category":     comm.Category,
+			"member_count": countMap[comm.ID], // Authentic member count!
+			"is_joined":    joinedMap[comm.ID],
+		})
+	}
+
 	return c.JSON(fiber.Map{
-		"komunitas": communities,
+		"komunitas": response,
 		"total":     len(communities),
 	})
 }
+
+// ToggleJoinCommunity bergabung atau keluar dari komunitas
+// POST /api/communities/:id/join
+func ToggleJoinCommunity(c *fiber.Ctx) error {
+	userID := c.Locals("user_id").(uint)
+	communityID, err := c.ParamsInt("id")
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "ID komunitas tidak valid"})
+	}
+
+	var member models.CommunityMember
+	result := config.DB.Where("user_id = ? AND community_id = ?", userID, communityID).First(&member)
+
+	if result.Error == nil {
+		// Sudah join, maka keluar (leave)
+		config.DB.Delete(&member)
+		config.DB.Exec("UPDATE communities SET member_count = member_count - 1 WHERE id = ?", communityID)
+		return c.JSON(fiber.Map{"pesan": "Berhasil keluar dari komunitas", "is_joined": false})
+	} else {
+		// Belum join, maka gabung
+		newMember := models.CommunityMember{
+			UserID:      userID,
+			CommunityID: uint(communityID),
+		}
+		config.DB.Create(&newMember)
+		config.DB.Exec("UPDATE communities SET member_count = member_count + 1 WHERE id = ?", communityID)
+		return c.JSON(fiber.Map{"pesan": "Berhasil bergabung dengan komunitas", "is_joined": true})
+	}
+}
+
 
 // GetCommunityMessages mengambil pesan dari komunitas tertentu
 // GET /api/communities/:id/messages
@@ -73,9 +142,9 @@ func SendCommunityMessage(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "Pesan tidak boleh kosong"})
 	}
 
-	// Ambil nama & level user
+	// Ambil nama, level, & avatar user
 	var user models.User
-	config.DB.Select("id, name, level").First(&user, userID)
+	config.DB.Select("id, name, level, avatar").First(&user, userID)
 
 	msg := models.ChatMessage{
 		CommunityID: uint(communityID),
