@@ -1,28 +1,28 @@
 # EcoConnect Frontend
 
-Frontend EcoConnect adalah aplikasi Flutter mobile-first untuk menjalankan onboarding, autentikasi, dashboard dampak, check-in aksi ramah lingkungan, komunitas, forum chat, leaderboard, profil, dan pengaturan tema.
+EcoConnect Frontend is a mobile-first Flutter application for onboarding, authentication, impact dashboards, eco-action check-ins, communities, forum chat, leaderboards, profiles, and theme settings.
 
-## Ringkasan
+## Overview
 
-Project ini memakai Flutter dengan struktur feature-based:
+This project uses Flutter with a feature-based structure:
 
-- `lib/core/`: konfigurasi global seperti routing, theme, constants, dan helper.
-- `lib/features/`: layar utama aplikasi per domain fitur.
-- `lib/services/`: akses API dan session/token storage.
-- `lib/widgets/`: widget lintas fitur, termasuk shell navigasi bawah.
-- `assets/`: gambar, font, icon, dan animasi.
+- `lib/core/`: global configuration such as routing, theme, constants, and helpers.
+- `lib/features/`: main application screens grouped by feature domain.
+- `lib/services/`: API access and session/token storage.
+- `lib/widgets/`: cross-feature widgets, including the bottom navigation shell.
+- `assets/`: images, fonts, icons, and animations.
 
-## Fitur UI
+## UI Features
 
-- Splash screen dengan branding EcoConnect.
-- Onboarding kategori dengan ikon, kartu visual, dan pilihan multi-select.
-- Login dan register dengan tampilan glass/dark gradient.
-- Dashboard dengan kartu dampak, progres level, misi premium, komunitas, dan aktivitas terakhir.
-- Check-in aksi dengan kategori, input satuan, estimasi reward, dan riwayat aktivitas.
-- Komunitas dengan join/leave dan forum diskusi.
-- Forum chat yang sudah mendukung kontras dark mode.
-- Leaderboard dengan layout podium.
-- Profil pengguna, avatar picker, edit profil, privasi, bantuan, dan theme mode.
+- Splash screen with EcoConnect branding.
+- Category onboarding with icons, visual cards, and multi-select choices.
+- Login and registration with a glass/dark gradient look.
+- Dashboard with impact cards, level progress, premium missions, communities, and recent activity.
+- Action check-ins with categories, unit input, reward estimation, and activity history.
+- Communities with join/leave support and discussion forums.
+- Forum chat with dark mode contrast support.
+- Leaderboard with a podium layout.
+- User profile, avatar picker, profile editing, privacy, help, and theme mode.
 
 ## Tech Stack
 
@@ -42,7 +42,7 @@ Project ini memakai Flutter dengan struktur feature-based:
 - intl
 - url_launcher
 
-## Struktur Folder Penting
+## Important Folder Structure
 
 ```text
 frontend/
@@ -78,41 +78,41 @@ frontend/
 `-- macos/
 ```
 
-## Konfigurasi API
+## API Configuration
 
-Base URL API berada di:
+The API base URL is configured in:
 
 ```text
 lib/core/constants/app_constants.dart
 ```
 
-Default production:
+Default production URL:
 
 ```text
 https://mafalqi-ecoconnect-backend.hf.space/api
 ```
 
-Gunakan `--dart-define=API_BASE_URL=...` untuk mengganti target API tanpa mengubah source code.
+Use `--dart-define=API_BASE_URL=...` to change the API target without modifying the source code.
 
-Contoh:
+Examples:
 
 ```bash
-# Backend lokal dari Flutter Web/Desktop
+# Local backend from Flutter Web/Desktop
 flutter run -d chrome --dart-define=API_BASE_URL=http://localhost:8080/api
 
-# Backend lokal dari Android emulator
+# Local backend from the Android emulator
 flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8080/api
 
-# Backend lokal dari HP fisik di jaringan Wi-Fi yang sama
+# Local backend from a physical phone on the same Wi-Fi network
 flutter run --dart-define=API_BASE_URL=http://YOUR_LAN_IP:8080/api
 ```
 
-Catatan:
+Notes:
 
-- `localhost` dari Android emulator bukan komputer host, gunakan `10.0.2.2`.
-- Untuk HP fisik, backend harus listen di `0.0.0.0` dan firewall Windows harus mengizinkan port backend.
+- `localhost` from the Android emulator is not the host computer; use `10.0.2.2`.
+- For a physical phone, the backend must listen on `0.0.0.0`, and Windows Firewall must allow the backend port.
 
-## Menjalankan Aplikasi
+## Running the Application
 
 Install dependencies:
 
@@ -120,20 +120,20 @@ Install dependencies:
 flutter pub get
 ```
 
-Jalankan di device yang tersedia:
+Run on an available device:
 
 ```bash
 flutter devices
 flutter run
 ```
 
-Jalankan di Chrome:
+Run in Chrome:
 
 ```bash
 flutter run -d chrome
 ```
 
-Jalankan dengan API lokal:
+Run with a local API:
 
 ```bash
 flutter run -d chrome --dart-define=API_BASE_URL=http://localhost:8080/api
@@ -141,7 +141,7 @@ flutter run -d chrome --dart-define=API_BASE_URL=http://localhost:8080/api
 
 ## Build
 
-Build APK release:
+Build the release APK:
 
 ```bash
 flutter build apk --release
@@ -153,13 +153,13 @@ Output:
 build/app/outputs/flutter-apk/
 ```
 
-Pada konfigurasi project saat ini, file release yang dipakai adalah:
+In the current project configuration, the release file used is:
 
 ```text
 build/app/outputs/flutter-apk/EcoConnect.apk
 ```
 
-Build Web:
+Build for Web:
 
 ```bash
 flutter build web
@@ -171,19 +171,19 @@ Output:
 build/web/
 ```
 
-Serve build web lokal untuk pengecekan cepat:
+Serve the local web build for a quick check:
 
 ```bash
 python -m http.server 3000 --bind 127.0.0.1 --directory build/web
 ```
 
-Lalu buka:
+Then open:
 
 ```text
 http://127.0.0.1:3000
 ```
 
-## Test dan Quality Check
+## Tests and Quality Checks
 
 ```bash
 flutter test
@@ -191,21 +191,21 @@ dart format lib test
 flutter analyze --no-fatal-infos --no-fatal-warnings
 ```
 
-Catatan:
+Notes:
 
-- `flutter analyze` tanpa flag non-fatal masih menampilkan lint/info lama di repo.
-- Beberapa lint lama yang umum muncul: `withOpacity` deprecated, prefer `const`, dan style lint async context.
+- `flutter analyze` without the non-fatal flags still shows older lint/info messages in the repo.
+- Some common older lints include deprecated `withOpacity`, prefer `const`, and async context style lints.
 
-## Theme dan Asset
+## Theme and Assets
 
-Theme utama ada di:
+The main theme is located in:
 
 ```text
 lib/core/theme/app_theme.dart
 lib/core/theme/theme_provider.dart
 ```
 
-Asset yang dipakai:
+Assets used:
 
 ```text
 assets/images/logo_app.png
@@ -215,34 +215,34 @@ assets/fonts/Poppins-SemiBold.ttf
 assets/fonts/Poppins-Bold.ttf
 ```
 
-## Navigasi
+## Navigation
 
-Routing utama memakai `go_router` di:
+The main routing uses `go_router` in:
 
 ```text
 lib/core/router/app_router.dart
 ```
 
-Route penting:
+Important routes:
 
-| Route | Layar |
+| Route | Screen |
 | --- | --- |
 | `/splash` | Splash screen |
 | `/onboarding` | Onboarding |
 | `/masuk` | Login |
 | `/daftar` | Register |
 | `/beranda` | Dashboard |
-| `/tugas` | Aksi/check-in |
-| `/komunitas` | Daftar komunitas |
-| `/komunitas/:id` | Forum komunitas |
+| `/tugas` | Actions/check-ins |
+| `/komunitas` | Community list |
+| `/komunitas/:id` | Community forum |
 | `/papan-peringkat` | Leaderboard |
-| `/profil` | Profil user |
+| `/profil` | User profile |
 | `/privasi` | Privacy |
 | `/bantuan` | Help center |
 
-## Catatan Rilis UI Terbaru
+## Latest UI Release Notes
 
-- Splash screen dibuat lebih kuat secara visual dengan logo, gradient, pattern, dan chip fitur.
-- Onboarding tidak lagi memakai emoji besar, diganti kartu kategori dengan ikon Lucide.
-- Register mengikuti gaya ikon yang sama pada kategori minat.
-- Chat forum dark mode diperbaiki supaya teks input dan bubble tidak hitam di background gelap.
+- The splash screen was made visually stronger with a logo, gradient, pattern, and feature chips.
+- Onboarding no longer uses large emojis; they were replaced with category cards and Lucide icons.
+- Registration follows the same icon style for interest categories.
+- Forum chat dark mode was improved so input text and bubbles do not appear black on dark backgrounds.

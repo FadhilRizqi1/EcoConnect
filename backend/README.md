@@ -1,10 +1,10 @@
 # EcoConnect Backend
 
-Backend EcoConnect adalah REST API berbasis Go untuk autentikasi, aksi ramah lingkungan, check-in, profil, leaderboard, komunitas, dan forum chat.
+EcoConnect Backend is a Go-based REST API for authentication, eco-friendly actions, check-ins, profiles, leaderboards, communities, and forum chat.
 
-## Ringkasan
+## Overview
 
-Backend memakai:
+The backend uses:
 
 - Go 1.25
 - Fiber v2
@@ -20,16 +20,16 @@ Entry point:
 main.go
 ```
 
-Saat aplikasi start, backend akan:
+When the application starts, the backend will:
 
-- Memuat `.env` dari root project (`../.env`).
-- Connect ke PostgreSQL.
-- Menjalankan GORM AutoMigrate.
-- Seed data awal untuk task, action, dan community jika belum ada.
-- Mengoreksi poin misi premium.
-- Menjalankan server Fiber.
+- Load `.env` from the project root (`../.env`).
+- Connect to PostgreSQL.
+- Run GORM AutoMigrate.
+- Seed initial task, action, and community data if they do not exist yet.
+- Adjust premium mission points.
+- Start the Fiber server.
 
-## Struktur Folder
+## Folder Structure
 
 ```text
 backend/
@@ -61,12 +61,12 @@ backend/
 
 ## Environment
 
-Buat `.env` di root project, satu level di atas folder `backend/`:
+Create a `.env` file in the project root, one level above the `backend/` folder:
 
 ```env
 DATABASE_URL=postgres://USER:PASSWORD@HOST:PORT/DB_NAME?sslmode=require
 
-# Alternatif jika tidak memakai DATABASE_URL:
+# Alternative when not using DATABASE_URL:
 DB_HOST=your-db-host
 DB_PORT=6543
 DB_USER=your-db-user
@@ -77,19 +77,19 @@ JWT_SECRET=change_this_with_a_long_random_secret
 APP_PORT=8080
 ```
 
-Urutan port:
+Port priority:
 
 1. `PORT`
 2. `APP_PORT`
 3. `7860`
 
-Catatan:
+Notes:
 
-- `DATABASE_URL` diprioritaskan jika tersedia.
-- Jika memakai variable `DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, dan `DB_PORT`, koneksi memakai `sslmode=require`.
-- Timezone database diset ke `Asia/Jakarta`.
+- `DATABASE_URL` is prioritized when available.
+- If using the `DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, and `DB_PORT` variables, the connection uses `sslmode=require`.
+- The database timezone is set to `Asia/Jakarta`.
 
-## Menjalankan Lokal
+## Running Locally
 
 ```bash
 cd backend
@@ -103,7 +103,7 @@ Health check:
 http://localhost:8080/health
 ```
 
-Jika `APP_PORT` tidak diset, server default berjalan di port `7860`.
+If `APP_PORT` is not set, the server runs on port `7860` by default.
 
 ## Build Binary
 
@@ -121,7 +121,7 @@ cd backend
 go build -o ecoconnect .
 ```
 
-## Endpoint API
+## API Endpoints
 
 Base path:
 
@@ -131,47 +131,47 @@ Base path:
 
 ### Public
 
-| Method | Endpoint | Handler | Keterangan |
+| Method | Endpoint | Handler | Description |
 | --- | --- | --- | --- |
-| `POST` | `/api/auth/daftar` | `Register` | Registrasi user |
-| `POST` | `/api/auth/masuk` | `Login` | Login dan ambil JWT |
+| `POST` | `/api/auth/daftar` | `Register` | User registration |
+| `POST` | `/api/auth/masuk` | `Login` | Login and retrieve a JWT |
 | `GET` | `/health` | inline | Health check |
 
 ### Protected
 
-Semua endpoint berikut butuh header:
+All endpoints below require this header:
 
 ```text
 Authorization: Bearer <token>
 ```
 
-| Method | Endpoint | Handler | Keterangan |
+| Method | Endpoint | Handler | Description |
 | --- | --- | --- | --- |
-| `GET` | `/api/actions` | `GetActions` | Daftar aksi ramah lingkungan |
-| `POST` | `/api/checkin` | `CheckIn` | Submit aksi user |
-| `GET` | `/api/profil/:id` | `GetProfile` | Detail profil |
-| `PUT` | `/api/profil` | `UpdateProfile` | Update profil user login |
-| `GET` | `/api/papan-peringkat` | `GetLeaderboard` | Ranking user |
-| `GET` | `/api/riwayat` | `GetRiwayat` | Riwayat aktivitas user |
-| `GET` | `/api/communities` | `GetCommunities` | Daftar komunitas |
-| `POST` | `/api/communities/:id/join` | `ToggleJoinCommunity` | Join/leave komunitas |
-| `GET` | `/api/communities/:id/messages` | `GetCommunityMessages` | Ambil pesan forum |
-| `POST` | `/api/communities/:id/messages` | `SendCommunityMessage` | Kirim pesan forum |
+| `GET` | `/api/actions` | `GetActions` | List eco-friendly actions |
+| `POST` | `/api/checkin` | `CheckIn` | Submit a user action |
+| `GET` | `/api/profil/:id` | `GetProfile` | Profile details |
+| `PUT` | `/api/profil` | `UpdateProfile` | Update the logged-in user's profile |
+| `GET` | `/api/papan-peringkat` | `GetLeaderboard` | User rankings |
+| `GET` | `/api/riwayat` | `GetRiwayat` | User activity history |
+| `GET` | `/api/communities` | `GetCommunities` | Community list |
+| `POST` | `/api/communities/:id/join` | `ToggleJoinCommunity` | Join/leave a community |
+| `GET` | `/api/communities/:id/messages` | `GetCommunityMessages` | Fetch forum messages |
+| `POST` | `/api/communities/:id/messages` | `SendCommunityMessage` | Send a forum message |
 
 ### Legacy Compatibility
 
-Endpoint lama masih diregistrasikan untuk kompatibilitas:
+Older endpoints are still registered for compatibility:
 
-| Method | Endpoint | Keterangan |
+| Method | Endpoint | Description |
 | --- | --- | --- |
-| `GET` | `/api/tugas` | Daftar task lama |
-| `POST` | `/api/tugas/:id/selesai` | Selesaikan task lama |
-| `GET` | `/api/grup` | Daftar grup lama |
-| `POST` | `/api/grup/:id/bergabung` | Join grup lama |
-| `GET` | `/api/grup/:id/pesan` | Ambil pesan grup lama |
-| `POST` | `/api/grup/:id/pesan` | Kirim pesan grup lama |
+| `GET` | `/api/tugas` | List legacy tasks |
+| `POST` | `/api/tugas/:id/selesai` | Complete a legacy task |
+| `GET` | `/api/grup` | List legacy groups |
+| `POST` | `/api/grup/:id/bergabung` | Join a legacy group |
+| `GET` | `/api/grup/:id/pesan` | Fetch legacy group messages |
+| `POST` | `/api/grup/:id/pesan` | Send a legacy group message |
 
-## Contoh Request
+## Example Requests
 
 Login:
 
@@ -187,19 +187,19 @@ Check-in:
 curl -X POST http://localhost:8080/api/checkin \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
-  -d "{\"action_id\":4,\"input_value\":10,\"notes\":\"Bersepeda pagi\"}"
+  -d "{\"action_id\":4,\"input_value\":10,\"notes\":\"Morning bike ride\"}"
 ```
 
-Ambil komunitas:
+Fetch communities:
 
 ```bash
 curl http://localhost:8080/api/communities \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
-## Model Utama
+## Main Models
 
-AutoMigrate mencakup model:
+AutoMigrate covers these models:
 
 - `User`
 - `Task`
@@ -216,16 +216,16 @@ AutoMigrate mencakup model:
 
 ## Seed Data
 
-Saat tabel masih kosong, backend membuat data awal:
+When the tables are still empty, the backend creates initial data:
 
-- Task legacy untuk kategori Diet Vegan, Hemat Energi, dan Transportasi Hijau.
-- Action untuk lima kategori utama.
-- Community untuk lima kategori utama.
-- Poin premium untuk beberapa misi disesuaikan agar lebih tinggi.
+- Legacy tasks for Vegan Diet, Energy Saving, and Green Transportation categories.
+- Actions for the five main categories.
+- Communities for the five main categories.
+- Premium mission points are adjusted to be higher for selected missions.
 
 ## CORS
 
-CORS saat ini terbuka untuk semua origin:
+CORS is currently open to all origins:
 
 ```text
 AllowOrigins: *
@@ -233,31 +233,31 @@ AllowHeaders: Origin, Content-Type, Accept, Authorization
 AllowMethods: GET, POST, PUT, DELETE, OPTIONS
 ```
 
-Untuk production yang lebih ketat, batasi `AllowOrigins` ke domain frontend yang dipakai.
+For stricter production settings, limit `AllowOrigins` to the frontend domain in use.
 
 ## Deployment
 
-Server membaca `PORT`, sehingga cocok untuk platform yang menyuntikkan port lewat environment variable seperti Hugging Face Spaces atau platform container lain.
+The server reads `PORT`, so it works well on platforms that inject ports through environment variables, such as Hugging Face Spaces or other container platforms.
 
-Jika memakai Dockerfile root project, pastikan build context sesuai dengan lokasi `go.mod`. Untuk deployment backend saja, context yang paling aman adalah folder `backend/` atau Dockerfile yang sudah disesuaikan untuk struktur repository ini.
+If using the root project Dockerfile, make sure the build context matches the location of `go.mod`. For backend-only deployment, the safest context is the `backend/` folder or a Dockerfile adjusted for this repository structure.
 
 ## Troubleshooting
 
-Database gagal connect:
+Database connection fails:
 
-- Pastikan `.env` berada di root project.
-- Pastikan `DATABASE_URL` valid atau semua variable `DB_*` lengkap.
-- Pastikan Supabase pooler memakai SSL.
-- Pastikan IP/network mengizinkan koneksi.
+- Make sure `.env` is located in the project root.
+- Make sure `DATABASE_URL` is valid or all `DB_*` variables are complete.
+- Make sure the Supabase pooler uses SSL.
+- Make sure the IP/network allows the connection.
 
-Frontend gagal login/register:
+Frontend fails to login/register:
 
-- Pastikan backend hidup.
-- Pastikan frontend memakai `API_BASE_URL` yang benar.
-- Untuk Android emulator gunakan `http://10.0.2.2:PORT/api`.
-- Untuk HP fisik gunakan IP LAN komputer, bukan `localhost`.
+- Make sure the backend is running.
+- Make sure the frontend uses the correct `API_BASE_URL`.
+- For the Android emulator, use `http://10.0.2.2:PORT/api`.
+- For a physical phone, use the computer's LAN IP instead of `localhost`.
 
-Token ditolak:
+Token is rejected:
 
-- Pastikan header `Authorization` memakai format `Bearer <token>`.
-- Pastikan `JWT_SECRET` tidak berubah antara proses login dan request berikutnya.
+- Make sure the `Authorization` header uses the `Bearer <token>` format.
+- Make sure `JWT_SECRET` does not change between the login process and subsequent requests.
