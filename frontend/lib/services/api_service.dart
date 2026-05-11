@@ -98,6 +98,15 @@ class ApiService {
     return _parse(res);
   }
 
+  static Future<Map<String, dynamic>> updateProfile(Map<String, dynamic> data) async {
+    final res = await http.put(
+      Uri.parse(AppConstants.updateProfil),
+      headers: await _headers(),
+      body: jsonEncode(data),
+    );
+    return _parse(res);
+  }
+
   static Future<List<dynamic>> getLeaderboard() async {
     final res = await http.get(
       Uri.parse(AppConstants.papanPeringkat),
@@ -105,6 +114,14 @@ class ApiService {
     );
     final data = _parse(res);
     return data['peringkat'] as List<dynamic>? ?? [];
+  }
+
+  static Future<Map<String, dynamic>> getRiwayat() async {
+    final res = await http.get(
+      Uri.parse(AppConstants.riwayat),
+      headers: await _headers(),
+    );
+    return _parse(res);
   }
 
   // ── Komunitas (new endpoint) ──────────────────────────────────────
@@ -125,6 +142,14 @@ class ApiService {
     );
     final data = _parse(res);
     return data['pesan'] as List<dynamic>? ?? [];
+  }
+
+  static Future<Map<String, dynamic>> toggleJoinCommunity(int communityId) async {
+    final res = await http.post(
+      Uri.parse(AppConstants.toggleCommunityJoin(communityId)),
+      headers: await _headers(),
+    );
+    return _parse(res);
   }
 
   static Future<Map<String, dynamic>> sendCommunityMessage(

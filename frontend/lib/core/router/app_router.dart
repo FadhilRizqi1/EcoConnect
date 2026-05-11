@@ -10,6 +10,8 @@ import '../../features/profile/profile_screen.dart';
 import '../../features/leaderboard/leaderboard_screen.dart';
 import '../../features/communities/communities_screen.dart';
 import '../../features/communities/community_chat_screen.dart';
+import '../../features/profile/privacy_screen.dart';
+import '../../features/profile/help_center_screen.dart';
 import '../../widgets/main_shell.dart';
 
 /// EcoConnect Router — GoRouter with auth redirect
@@ -35,7 +37,7 @@ final appRouter = GoRouter(
     // Onboarding & Auth
     GoRoute(path: '/onboarding', builder: (_, __) => const OnboardingScreen()),
     GoRoute(path: '/masuk',      builder: (_, __) => const LoginScreen()),
-    GoRoute(path: '/daftar',     builder: (_, __) => const RegisterScreen()),
+    GoRoute(path: '/daftar',     builder: (_, state) => RegisterScreen(initialCategories: state.extra as List<String>?)),
 
     // Main shell with bottom nav (4 tabs: Beranda, Tugas, Komunitas, Peringkat)
     ShellRoute(
@@ -45,16 +47,23 @@ final appRouter = GoRouter(
         GoRoute(path: '/tugas',           builder: (_, __) => const TasksScreen()),
         GoRoute(path: '/komunitas',       builder: (_, __) => const CommunitiesScreen()),
         GoRoute(path: '/papan-peringkat', builder: (_, __) => const LeaderboardScreen()),
+        GoRoute(path: '/profil',          builder: (_, __) => const ProfileScreen(userId: 0)),
         GoRoute(
           path: '/profil/:id',
           builder: (_, state) => ProfileScreen(userId: int.parse(state.pathParameters['id']!)),
         ),
-        GoRoute(
-          path: '/komunitas/:id',
-          builder: (_, state) => CommunityChatScreen(communityId: int.parse(state.pathParameters['id']!)),
-        ),
       ],
     ),
+
+    // Chat Screen (No Bottom Nav / FAB)
+    GoRoute(
+      path: '/komunitas/:id',
+      builder: (_, state) => CommunityChatScreen(communityId: int.parse(state.pathParameters['id']!)),
+    ),
+
+    // Sub-screens
+    GoRoute(path: '/privasi', builder: (_, __) => const PrivacyScreen()),
+    GoRoute(path: '/bantuan', builder: (_, __) => const HelpCenterScreen()),
   ],
   errorBuilder: (context, state) => Scaffold(
     body: Center(child: Text('Halaman tidak ditemukan: ${state.error}')),

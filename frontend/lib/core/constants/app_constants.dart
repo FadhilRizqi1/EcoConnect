@@ -4,8 +4,8 @@ class AppConstants {
   AppConstants._();
 
   // ── Base URL ─────────────────────────────────────────────────────
-  static const String baseUrl = 'http://localhost:8080/api'; // Web/Chrome
-  // static const String baseUrl = 'http://10.0.2.2:8080/api'; // Android emulator
+  // Diganti ke IP laptop agar bisa diakses dari device fisik (Android/iOS)
+  static const String baseUrl = 'http://192.168.100.11:8080/api'; 
 
   // ── Auth ─────────────────────────────────────────────────────────
   static const String daftar = '$baseUrl/auth/daftar';
@@ -17,11 +17,14 @@ class AppConstants {
 
   // ── Komunitas (Phase 1 new endpoints) ────────────────────────────
   static const String communities = '$baseUrl/communities';
+  static String toggleCommunityJoin(int id) => '$baseUrl/communities/$id/join';
   static String communityMessages(int id) => '$baseUrl/communities/$id/messages';
 
   // ── Profil & Papan Peringkat ──────────────────────────────────────
   static String profil(int id) => '$baseUrl/profil/$id';
+  static const String updateProfil = '$baseUrl/profil';
   static const String papanPeringkat = '$baseUrl/papan-peringkat';
+  static const String riwayat = '$baseUrl/riwayat';
 
   // ── Grup (legacy, still supported) ───────────────────────────────
   static const String grup = '$baseUrl/grup';

@@ -21,7 +21,7 @@ dependencies:
   # UI & Animations (Peak-End Rule: konfeti)
   confetti: ^0.7.0
   flutter_animate: ^4.5.0
-  lottie: ^3.1.0
+  lottie: ^3.3.3
   cached_network_image: ^3.4.1
   shimmer: ^3.0.0
 
@@ -30,11 +30,13 @@ dependencies:
 
   # Icons & Fonts
   cupertino_icons: ^1.0.8
-  flutter_svg: ^2.0.10+1
+  flutter_svg: ^2.3.0
 
   # Utils
   intl: ^0.19.0
   url_launcher: ^6.3.1
+  lucide_icons: ^0.257.0
+  google_fonts: ^8.1.0
 
 dev_dependencies:
   flutter_test:
