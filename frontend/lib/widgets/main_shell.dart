@@ -37,6 +37,8 @@ class MainShell extends StatelessWidget {
     final isFabActive = GoRouterState.of(context).matchedLocation.startsWith('/tugas');
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF4F7F5),
+      extendBody: true, // This allows the body to flow underneath the BottomAppBar, filling the notch area
       body: child,
       // Fitts's Law: Core action (Check-in) is prominent and easy to reach.
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
@@ -46,16 +48,20 @@ class MainShell extends StatelessWidget {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           gradient: const LinearGradient(
-            colors: [AppColors.accentAmber, Color(0xFFFFB03A)], // Amber Gradient
+            colors: [Color(0xFF4FC87A), Color(0xFF1A4D2E)], // Dominant Premium Green
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
+          border: Border.all(
+            color: const Color(0xFFFFB03A).withOpacity(0.9), // Orange 'lis' (border)
+            width: 2.5,
+          ),
           boxShadow: [
             BoxShadow(
-              color: AppColors.accentAmber.withOpacity(0.5),
-              blurRadius: 20,
+              color: const Color(0xFFFFB03A).withOpacity(0.4), // Orange 'cahaya' (glow)
+              blurRadius: 16,
               spreadRadius: 2,
-              offset: const Offset(0, 8),
+              offset: const Offset(0, 0), // Centered glow for uniform light
             ),
           ],
         ),
@@ -82,9 +88,10 @@ class MainShell extends StatelessWidget {
       bottomNavigationBar: BottomAppBar(
         color: Colors.white,
         shape: const CircularNotchedRectangle(),
-        notchMargin: 10,
-        elevation: 20,
-        shadowColor: Colors.black.withOpacity(0.3),
+        notchMargin: 8,
+        elevation: 8,
+        shadowColor: Colors.black.withOpacity(0.05),
+        clipBehavior: Clip.antiAlias,
         child: SizedBox(
           height: 68, // Ditambah sedikit agar tidak ada vertical overflow
           child: Row(
