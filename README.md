@@ -70,12 +70,12 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    EcoConnect Architecture                   │
+│                    EcoConnect Architecture                  │
 │                                                             │
 │  ┌──────────────┐        ┌──────────────┐                   │
-│  │   Frontend   │ HTTP   │   Backend    │                   │
+│  │   Frontend   │  HTTP  │   Backend    │                   │
 │  │              │◄──────►│              │                   │
-│  │   Flutter    │  JSON  │  Go Fiber    │                   │
+│  │   Flutter    │  JSON  │   Go Fiber   │                   │
 │  │   (Web/App)  │        │   REST API   │                   │
 │  └──────────────┘        └──────┬───────┘                   │
 │                                 │ GORM                      │
