@@ -62,7 +62,7 @@ func Register(c *fiber.Ctx) error {
 		Email:    input.Email,
 		Password: string(hashed),
 		Category: input.Category,
-		Level:    "Pemula",
+		Level:    "Tunas",
 	}
 
 	if result := config.DB.Create(&user); result.Error != nil {

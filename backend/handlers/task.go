@@ -102,12 +102,22 @@ func updateUserLevel(userID uint) {
 	var user models.User
 	config.DB.Select("reputation_points").First(&user, userID)
 
-	level := "Pemula"
+	level := "Tunas"
 	switch {
-	case user.ReputationPoints >= 500:
-		level = "Pahlawan Bumi"
+	case user.ReputationPoints >= 5000:
+		level = "Titan Hijau"
+	case user.ReputationPoints >= 2500:
+		level = "Ksatria Ekologi"
+	case user.ReputationPoints >= 1200:
+		level = "Pelindung Bumi"
+	case user.ReputationPoints >= 600:
+		level = "Pengawal Alam"
+	case user.ReputationPoints >= 300:
+		level = "Pohon"
 	case user.ReputationPoints >= 150:
-		level = "Penjaga Alam"
+		level = "Daun Hijau"
+	case user.ReputationPoints >= 50:
+		level = "Bibit"
 	}
 	config.DB.Model(&models.User{}).Where("id = ?", userID).Update("level", level)
 }

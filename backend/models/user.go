@@ -19,7 +19,7 @@ type User struct {
 	// Social Capital (Hukum Tesler – kompleksitas disimpan di backend)
 	ReputationPoints int     `gorm:"default:0" json:"reputation_points"`
 	TotalCarbonSaved float64 `gorm:"default:0" json:"total_carbon_saved"`
-	Level            string  `gorm:"default:'Pemula';size:50" json:"level"` // Pemula, Penjaga Alam, Pahlawan Bumi
+	Level            string  `gorm:"default:'Tunas';size:50" json:"level"` // 8-Rank System
 
 	// Onboarding categories (Hukum Hick – max 5 pilihan)
 	Category         string       `gorm:"size:100" json:"category"` // e.g. "Diet Vegan", "Hemat Energi"
