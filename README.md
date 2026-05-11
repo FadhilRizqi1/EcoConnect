@@ -8,6 +8,7 @@
 [![Go](https://img.shields.io/badge/Go-1.25+-00ADD8?style=for-the-badge&logo=go&logoColor=white)](https://golang.org)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Supabase-336791?style=for-the-badge&logo=postgresql&logoColor=white)](https://supabase.com)
 [![Fiber](https://img.shields.io/badge/Fiber-v2-00ACD7?style=for-the-badge&logo=go&logoColor=white)](https://gofiber.io)
+[![Android APK](https://img.shields.io/badge/APK-EcoConnect%201.0.0%2B1-3DDC84?style=for-the-badge&logo=android&logoColor=white)](frontend/build/app/outputs/flutter-apk/EcoConnect.apk)
 
 <br/>
 
@@ -31,6 +32,7 @@
   - [2. Database Setup (Supabase)](#2-database-setup-supabase)
   - [3. Run Backend](#3-run-backend)
   - [4. Run Frontend](#4-run-frontend-choose-method)
+- [APK Release](#apk-release)
 - [🗺️ API Endpoints](#️-api-endpoints)
 - [🎨 Design System](#-design-system)
 - [🧠 UX Principles Applied](#-ux-principles-applied)
@@ -53,18 +55,19 @@
 
 ## 🎯 Key Features
 
-| Feature | Description |
-|---------|-------------|
-| 🔐 **Authentication** | Register & Login with sophisticated **Dark Gradient** theme |
-| 🏠 **Dashboard** | Welcome card, rank progress, carbon stats, points, recent activity, joined communities, and premium mission highlight |
-| 💎 **Premium Missions** | Distinct high-reward missions with **Amber Gradient** and glow effects |
-| ✅ **Action Check-in** | Stepper input (+/-), real-time reward estimation, and Lucide icons |
-| 📜 **Activity History** | Full log of past actions with carbon/point summaries and notes |
-| 💬 **Community Forum** | Category-based community list, join/leave flow, member count, and chat messages |
-| 🏆 **Leaderboard** | Top users with **3D Visual Podium** design |
-| 🌱 **Onboarding** | Multi-category selection (Hick's Law) with community integration |
-| 👤 **Profile** | Profile stats, impact chart, badges, avatar picker, editable personal info, privacy, and help pages |
-| 🌓 **Theme Mode** | Persistent light/dark mode with dashboard and profile surfaces tuned for both themes |
+| Feature                 | Description                                                                                                           |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| 🔐 **Authentication**   | Register & Login with sophisticated **Dark Gradient** theme                                                           |
+| 🏠 **Dashboard**        | Welcome card, rank progress, carbon stats, points, recent activity, joined communities, and premium mission highlight |
+| 💎 **Premium Missions** | Distinct high-reward missions with **Amber Gradient** and glow effects                                                |
+| ✅ **Action Check-in**  | Stepper input (+/-), real-time reward estimation, and Lucide icons                                                    |
+| 📜 **Activity History** | Full log of past actions with carbon/point summaries and notes                                                        |
+| 💬 **Community Forum**  | Category-based community list, join/leave flow, member count, and chat messages                                       |
+| 🏆 **Leaderboard**      | Top users with **3D Visual Podium** design                                                                            |
+| 🌱 **Onboarding**       | Multi-category selection (Hick's Law) with community integration                                                      |
+| 👤 **Profile**          | Profile stats, impact chart, badges, avatar picker, editable personal info, privacy, and help pages                   |
+| 🌓 **Theme Mode**       | Persistent light/dark mode with dashboard and profile surfaces tuned for both themes                                  |
+| 📱 **Android APK**      | Release APK built with the latest splash, onboarding, and dark-mode chat improvements                                 |
 
 ---
 
@@ -104,40 +107,43 @@ EcoConnect implements a highly balanced, 8-tier progression system to keep users
 ```
 
 ### Backend
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| **Go** | 1.25+ | Backend programming language |
-| **Fiber v2** | latest | HTTP framework (Express-style for Go) |
-| **GORM** | v2 | ORM for PostgreSQL |
-| **golang-jwt** | v5 | JWT Authentication |
-| **godotenv** | latest | Environment variable management |
-| **bcrypt** | latest | Password hashing |
+
+| Technology     | Version | Purpose                               |
+| -------------- | ------- | ------------------------------------- |
+| **Go**         | 1.25+   | Backend programming language          |
+| **Fiber v2**   | latest  | HTTP framework (Express-style for Go) |
+| **GORM**       | v2      | ORM for PostgreSQL                    |
+| **golang-jwt** | v5      | JWT Authentication                    |
+| **godotenv**   | latest  | Environment variable management       |
+| **bcrypt**     | latest  | Password hashing                      |
 
 ### Frontend
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| **Flutter** | 3.x | UI framework (Mobile focus) |
-| **Dart** | 3.x | Programming language |
-| **go_router** | ^14.3 | Declarative routing |
-| **http** | ^1.2 | Lightweight HTTP client |
-| **lucide_icons** | latest | Premium iconography |
-| **confetti** | ^0.7 | Confetti animation (Peak-End Rule) |
-| **flutter_animate** | ^4.5 | Micro-animations & transitions |
-| **lottie** | ^3.3.3 | Center action animation |
-| **cached_network_image** | ^3.4 | Remote avatar/image caching |
-| **fl_chart** | ^0.68 | Profile impact chart |
-| **provider** | ^6.1 | Theme state management |
-| **intl** | ^0.19 | Date & number formatting |
-| **shared_preferences** | ^2.3 | Local token storage |
-| **google_fonts** | ^8.1 | Poppins text styling |
-| **flutter_svg** | ^2.3 | SVG asset support |
-| **url_launcher** | ^6.3 | External link handling |
+
+| Technology               | Version | Purpose                            |
+| ------------------------ | ------- | ---------------------------------- |
+| **Flutter**              | 3.x     | UI framework (Mobile focus)        |
+| **Dart**                 | 3.x     | Programming language               |
+| **go_router**            | ^14.3   | Declarative routing                |
+| **http**                 | ^1.2    | Lightweight HTTP client            |
+| **lucide_icons**         | latest  | Premium iconography                |
+| **confetti**             | ^0.7    | Confetti animation (Peak-End Rule) |
+| **flutter_animate**      | ^4.5    | Micro-animations & transitions     |
+| **lottie**               | ^3.3.3  | Center action animation            |
+| **cached_network_image** | ^3.4    | Remote avatar/image caching        |
+| **fl_chart**             | ^0.68   | Profile impact chart               |
+| **provider**             | ^6.1    | Theme state management             |
+| **intl**                 | ^0.19   | Date & number formatting           |
+| **shared_preferences**   | ^2.3    | Local token storage                |
+| **google_fonts**         | ^8.1    | Poppins text styling               |
+| **flutter_svg**          | ^2.3    | SVG asset support                  |
+| **url_launcher**         | ^6.3    | External link handling             |
 
 ### Database & Infrastructure
-| Technology | Purpose |
-|------------|---------|
-| **PostgreSQL** | Relational database |
-| **Supabase** | Cloud database hosting + connection pooling |
+
+| Technology     | Purpose                                     |
+| -------------- | ------------------------------------------- |
+| **PostgreSQL** | Relational database                         |
+| **Supabase**   | Cloud database hosting + connection pooling |
 
 ---
 
@@ -278,6 +284,7 @@ go run main.go
 ```
 
 **Expected output:**
+
 ```
 ✅ Database schema berhasil dimigrasikan
 🌱 Data tugas awal berhasil ditambahkan
@@ -294,10 +301,12 @@ go run main.go
 
 Open a **new terminal** (do not close the backend terminal), navigate to the `frontend/` folder and run `flutter pub get`. After that, choose one of the following methods:
 
-> **API base URL note:** `frontend/lib/core/constants/app_constants.dart` currently points to a local LAN address (`http://192.168.100.11:8080/api`) so a physical phone can reach the backend. For browser/emulator-only testing, change `baseUrl` to the address that matches your environment, such as `http://localhost:8080/api` for desktop web or `http://10.0.2.2:8080/api` for Android emulator.
+> **API base URL note:** `frontend/lib/core/constants/app_constants.dart` now defaults to the deployed production backend: `https://mafalqi-ecoconnect-backend.hf.space/api`. For local testing, override it with `--dart-define=API_BASE_URL=...`, such as `http://localhost:8080/api` for desktop web, `http://10.0.2.2:8080/api` for Android emulator, or `http://<your-computer-lan-ip>:8080/api` for a physical phone.
 
 #### 💻 Method A: Chrome / Edge Browser (Web)
-*Best for quick UI testing without an emulator/device.*
+
+_Best for quick UI testing without an emulator/device._
+
 ```bash
 flutter run -d chrome
 # or
@@ -305,38 +314,52 @@ flutter run -d edge
 ```
 
 #### 📱 Method B: Android Emulator / iOS Simulator
-*Best for testing native mobile experiences.*
+
+_Best for testing native mobile experiences._
+
 1. Open Android Studio and launch your AVD (Emulator).
 2. Run the command:
+
 ```bash
 flutter run
 ```
-*(Select your emulator from the list if prompted).*
+
+_(Select your emulator from the list if prompted)._
 
 #### 🔌 Method C: Physical Device (USB Debugging)
-*Highly recommended for testing native animation performance.*
+
+_Highly recommended for testing native animation performance._
+
 1. Enable **Developer Options** and **USB Debugging** on your phone.
 2. Connect your phone to the PC via a USB cable.
 3. Ensure it is detected by running `flutter devices`.
 4. Run the application:
+
 ```bash
 flutter run -d <your-device-id>
 ```
 
 #### 🛜 Method D: Physical Device via Wi-Fi (Wireless Debugging)
-*Best if you prefer testing without cables.*
+
+_Best if you prefer testing without cables._
+
 1. Ensure both your PC and phone are connected to the **same Wi-Fi network**.
 2. **Android 11+:** Open Developer Options -> **Wireless Debugging** -> "Pair device with pairing code".
 3. In your PC terminal, run:
+
 ```bash
 adb pair <IP_ADDRESS>:<PORT>
 ```
+
 4. Enter the pairing code from your phone.
 5. Connect to the device using the debugging port:
+
 ```bash
 adb connect <IP_ADDRESS>:<DEBUG_PORT>
 ```
+
 6. Run the Flutter application:
+
 ```bash
 flutter run
 ```
@@ -345,44 +368,90 @@ flutter run
 
 ---
 
+## APK Release
+
+The current Android release build is available in:
+
+```text
+frontend/build/app/outputs/flutter-apk/EcoConnect.apk
+```
+
+| APK Info | Value |
+| -------- | ----- |
+| App name | EcoConnect |
+| Version | `1.0.0+1` |
+| Build type | Release APK |
+| File name | `EcoConnect.apk` |
+| File size | `54.3 MB` |
+| Last local build | `May 11, 2026 18:54` |
+| Default API | `https://mafalqi-ecoconnect-backend.hf.space/api` |
+
+Build the release APK again with:
+
+```bash
+cd frontend
+flutter build apk --release
+```
+
+If you want to generate an APK that points to a local backend, pass `API_BASE_URL` during build:
+
+```bash
+flutter build apk --release --dart-define=API_BASE_URL=http://<your-computer-lan-ip>:8080/api
+```
+
+> For physical Android devices, do not use `localhost` as the API host. Use the computer's LAN IP address so the phone can reach the backend.
+
+Recent APK-related UI updates:
+
+- New branded splash screen with logo, gradient background, visual pattern, and feature chips.
+- Onboarding category cards now use Lucide icons instead of plain emoji.
+- Register category chips now match the onboarding icon style.
+- Community forum chat dark mode contrast has been fixed so input text and chat bubbles stay readable.
+
+---
+
 ## 🗺️ API Endpoints
 
 Base URL: `http://localhost:8080/api` for API routes. Health check is available outside the API group at `http://localhost:8080/health`.
 
 ### 🔓 Public (No Auth Required)
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/auth/daftar` | Register new account |
-| `POST` | `/auth/masuk` | Login, retrieve JWT token |
-| `GET` | `http://localhost:8080/health` | Server health check, outside `/api` |
+
+| Method | Endpoint                       | Description                         |
+| ------ | ------------------------------ | ----------------------------------- |
+| `POST` | `/auth/daftar`                 | Register new account                |
+| `POST` | `/auth/masuk`                  | Login, retrieve JWT token           |
+| `GET`  | `http://localhost:8080/health` | Server health check, outside `/api` |
 
 ### 🔐 Protected (Requires `Authorization: Bearer <token>`)
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/actions` | List all eco actions (filter: `?kategori=`) |
-| `POST` | `/checkin` | Submit green action check-in |
-| `GET` | `/profil/:id` | User profile data |
-| `PUT` | `/profil` | Update the logged-in user's name, bio, category, or avatar |
-| `GET` | `/papan-peringkat` | Top users ranked by points |
-| `GET` | `/riwayat` | Full user activity logs with aggregate stats |
-| `GET` | `/communities` | List communities (filter: `?kategori=`) |
-| `POST` | `/communities/:id/join` | Join or leave a community |
-| `GET` | `/communities/:id/messages` | Community forum messages |
-| `POST` | `/communities/:id/messages` | Send message to forum |
+
+| Method | Endpoint                    | Description                                                |
+| ------ | --------------------------- | ---------------------------------------------------------- |
+| `GET`  | `/actions`                  | List all eco actions (filter: `?kategori=`)                |
+| `POST` | `/checkin`                  | Submit green action check-in                               |
+| `GET`  | `/profil/:id`               | User profile data                                          |
+| `PUT`  | `/profil`                   | Update the logged-in user's name, bio, category, or avatar |
+| `GET`  | `/papan-peringkat`          | Top users ranked by points                                 |
+| `GET`  | `/riwayat`                  | Full user activity logs with aggregate stats               |
+| `GET`  | `/communities`              | List communities (filter: `?kategori=`)                    |
+| `POST` | `/communities/:id/join`     | Join or leave a community                                  |
+| `GET`  | `/communities/:id/messages` | Community forum messages                                   |
+| `POST` | `/communities/:id/messages` | Send message to forum                                      |
 
 ### Legacy Compatibility Endpoints
+
 These endpoints are still registered for backward compatibility with older task/group flows:
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/tugas` | Legacy task list |
-| `POST` | `/tugas/:id/selesai` | Complete a legacy task |
-| `GET` | `/grup` | Legacy group list |
-| `POST` | `/grup/:id/bergabung` | Join a legacy group |
-| `GET` | `/grup/:id/pesan` | Legacy group messages |
-| `POST` | `/grup/:id/pesan` | Send a legacy group message |
+| Method | Endpoint              | Description                 |
+| ------ | --------------------- | --------------------------- |
+| `GET`  | `/tugas`              | Legacy task list            |
+| `POST` | `/tugas/:id/selesai`  | Complete a legacy task      |
+| `GET`  | `/grup`               | Legacy group list           |
+| `POST` | `/grup/:id/bergabung` | Join a legacy group         |
+| `GET`  | `/grup/:id/pesan`     | Legacy group messages       |
+| `POST` | `/grup/:id/pesan`     | Send a legacy group message |
 
 ### Example Check-in Request
+
 ```json
 POST /api/checkin
 Authorization: Bearer eyJhbGc...
@@ -395,6 +464,7 @@ Authorization: Bearer eyJhbGc...
 ```
 
 ### Example Response
+
 ```json
 {
   "pesan": "Check-in berhasil!",
@@ -410,15 +480,15 @@ Authorization: Bearer eyJhbGc...
 
 EcoConnect uses color psychology: **Green (Nature) + Blue (Trust)** with **Amber (Premium)** accents.
 
-| Token | Color | Hex | Purpose |
-|-------|-------|-----|---------|
-| `primaryGreen` | 🟢 | `#1B6B3A` | Main CTA, active icons |
-| `primaryGreenMint` | 🟩 | `#4FC87A` | Highlights, success states |
-| `primaryBlueMid` | 🔵 | `#1A73C8` | Info, trust indicators |
-| `accentAmber` | 🟡 | `#FF8C00` | Premium cards (Von Restorff) |
-| `backgroundLight` | ⬜ | `#F5F9F6` | Main background |
-| `backgroundDark` | ⚫ | `#0F1F15` | Dark mode background |
-| `cardDark` | 🟩 | `#243329` | Dark mode card surfaces |
+| Token              | Color | Hex       | Purpose                      |
+| ------------------ | ----- | --------- | ---------------------------- |
+| `primaryGreen`     | 🟢    | `#1B6B3A` | Main CTA, active icons       |
+| `primaryGreenMint` | 🟩    | `#4FC87A` | Highlights, success states   |
+| `primaryBlueMid`   | 🔵    | `#1A73C8` | Info, trust indicators       |
+| `accentAmber`      | 🟡    | `#FF8C00` | Premium cards (Von Restorff) |
+| `backgroundLight`  | ⬜    | `#F5F9F6` | Main background              |
+| `backgroundDark`   | ⚫    | `#0F1F15` | Dark mode background         |
+| `cardDark`         | 🟩    | `#243329` | Dark mode card surfaces      |
 
 **Font:** `Poppins` — bundled in `frontend/assets/fonts/` and also supported through `google_fonts` for consistent text styling.
 
@@ -430,22 +500,23 @@ EcoConnect uses color psychology: **Green (Nature) + Blue (Trust)** with **Amber
 
 The EcoConnect design is built upon proven cognitive principles:
 
-| Principle | Implementation |
-|-----------|----------------|
-| **Hick's Law** | Maximum 5 category choices in onboarding & filters |
-| **Fitts's Law** | Full-width buttons & **Stepper (+/-)** buttons for easy input |
-| **Von Restorff Effect** | **Amber Glow** on premium missions makes them stand out |
-| **Peak-End Rule** | **Confetti animation** ✨ and snacks after success |
-| **Tesler's Law** | Point & carbon calculations are done server-side |
-| **Jakob's Law** | Standard bottom navigation & **Back buttons** in chat/history |
-| **Postel's Law** | Flexible decimal inputs, optional notes, lenient auth flow |
-| **Group Polarization** | Niche community forums strengthen shared green commitment |
+| Principle               | Implementation                                                |
+| ----------------------- | ------------------------------------------------------------- |
+| **Hick's Law**          | Maximum 5 category choices in onboarding & filters            |
+| **Fitts's Law**         | Full-width buttons & **Stepper (+/-)** buttons for easy input |
+| **Von Restorff Effect** | **Amber Glow** on premium missions makes them stand out       |
+| **Peak-End Rule**       | **Confetti animation** ✨ and snacks after success            |
+| **Tesler's Law**        | Point & carbon calculations are done server-side              |
+| **Jakob's Law**         | Standard bottom navigation & **Back buttons** in chat/history |
+| **Postel's Law**        | Flexible decimal inputs, optional notes, lenient auth flow    |
+| **Group Polarization**  | Niche community forums strengthen shared green commitment     |
 
 ---
 
 ## 📦 Dependencies
 
 ### Backend (`go.mod`)
+
 ```
 github.com/gofiber/fiber/v2
 github.com/golang-jwt/jwt/v5
@@ -456,6 +527,7 @@ gorm.io/driver/postgres
 ```
 
 ### Frontend (`pubspec.yaml`)
+
 ```yaml
 dependencies:
   flutter_animate: ^4.5.0
