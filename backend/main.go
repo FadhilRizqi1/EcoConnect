@@ -71,11 +71,17 @@ func main() {
 	routes.Setup(app)
 
 	// Start server
-	port := os.Getenv("APP_PORT")
+// Start server
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = os.Getenv("APP_PORT")
+	}
+
 	if port == "" {
 		port = "8080"
 	}
-	log.Printf("🚀 EcoConnect API berjalan di http://localhost:%s", port)
+
+	log.Printf("🚀 EcoConnect API siap dijalankan di port: %s", port)
 	log.Fatal(app.Listen(fmt.Sprintf(":%s", port)))
 }
 
