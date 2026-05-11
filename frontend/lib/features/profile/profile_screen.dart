@@ -295,22 +295,70 @@ class _ProfileScreenState extends State<ProfileScreen> {
           clipBehavior: Clip.none,
           children: [
             // Cover Image
-            SizedBox(
+            Container(
               height: 320,
               width: double.infinity,
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFF0F301C), // Deep forest green
+                    Color(0xFF1A4D2E), // Primary green
+                    Color(0xFF2D9653), // Medium green
+                  ],
+                ),
+              ),
               child: Stack(
-                fit: StackFit.expand,
                 children: [
-                  CachedNetworkImage(
-                    imageUrl: 'https://images.unsplash.com/photo-1511497584788-876760111969?q=80&w=1000&auto=format&fit=crop', // Forest canopy
-                    fit: BoxFit.cover,
+                  // Abstract decorative shapes
+                  Positioned(
+                    top: -50,
+                    right: -20,
+                    child: Container(
+                      width: 200,
+                      height: 200,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withOpacity(0.05),
+                      ),
+                    ),
                   ),
-                  Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [Colors.black.withOpacity(0.3), Colors.black.withOpacity(0.7)],
+                  Positioned(
+                    bottom: 80,
+                    left: -40,
+                    child: Container(
+                      width: 140,
+                      height: 140,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withOpacity(0.03),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: 60,
+                    left: 40,
+                    child: Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: const Color(0xFFFFB03A).withOpacity(0.1), // Subtle gold accent
+                      ),
+                    ),
+                  ),
+                  // Bottom gradient for smooth transition
+                  Align(
+                    alignment: Alignment.bottomCenter,
+                    child: Container(
+                      height: 120,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [Colors.transparent, Colors.black.withOpacity(0.25)],
+                        ),
                       ),
                     ),
                   ),
@@ -428,17 +476,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
             
             // Top Actions
             SafeArea(
-              child: Align(
-                alignment: Alignment.topRight,
-                child: isMe
-                    ? IconButton(
-                        icon: const Icon(LucideIcons.logOut, color: Colors.white),
-                        onPressed: () async {
-                          await AuthService.logout();
-                          if (mounted) context.go('/masuk');
-                        },
-                      )
-                    : const SizedBox.shrink(),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    context.canPop()
+                        ? Container(
+                            decoration: BoxDecoration(color: Colors.black.withOpacity(0.15), shape: BoxShape.circle),
+                            child: IconButton(
+                              icon: const Icon(LucideIcons.arrowLeft, color: Colors.white),
+                              onPressed: () => context.pop(),
+                            ),
+                          )
+                        : const SizedBox.shrink(),
+                    isMe
+                        ? Container(
+                            decoration: BoxDecoration(color: Colors.black.withOpacity(0.15), shape: BoxShape.circle),
+                            child: IconButton(
+                              icon: const Icon(LucideIcons.logOut, color: Colors.white),
+                              onPressed: () async {
+                                await AuthService.logout();
+                                if (mounted) context.go('/masuk');
+                              },
+                            ),
+                          )
+                        : const SizedBox.shrink(),
+                  ],
+                ),
               ),
             ),
           ],
