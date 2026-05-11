@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:fl_chart/fl_chart.dart';
+import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/theme/theme_provider.dart';
 import '../../services/api_service.dart';
 import '../../services/auth_service.dart';
 
@@ -18,7 +21,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _loading = true;
   String? _error;
   int? _myId;
-  
+
   final _nameCtrl = TextEditingController();
   final _bioCtrl = TextEditingController();
   String _selectedCategory = '';
@@ -32,12 +35,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
   ];
 
   final List<String> _avatars = [
+    // Avataaars style
     'https://api.dicebear.com/9.x/avataaars/png?seed=Felix&backgroundColor=e8f3eb',
     'https://api.dicebear.com/9.x/avataaars/png?seed=Aneka&backgroundColor=e8f3eb',
     'https://api.dicebear.com/9.x/avataaars/png?seed=Jude&backgroundColor=e8f3eb',
     'https://api.dicebear.com/9.x/avataaars/png?seed=Leo&backgroundColor=e8f3eb',
     'https://api.dicebear.com/9.x/avataaars/png?seed=Avery&backgroundColor=e8f3eb',
     'https://api.dicebear.com/9.x/avataaars/png?seed=Brian&backgroundColor=e8f3eb',
+    // Fun Emoji style
+    'https://api.dicebear.com/9.x/fun-emoji/png?seed=Daisy&backgroundColor=d1f4e0',
+    'https://api.dicebear.com/9.x/fun-emoji/png?seed=Storm&backgroundColor=d1f4e0',
+    'https://api.dicebear.com/9.x/fun-emoji/png?seed=Coco&backgroundColor=d1f4e0',
+    // Adventurer style
+    'https://api.dicebear.com/9.x/adventurer/png?seed=Milo&backgroundColor=e8f3eb',
+    'https://api.dicebear.com/9.x/adventurer/png?seed=Zara&backgroundColor=e8f3eb',
+    'https://api.dicebear.com/9.x/adventurer/png?seed=Nova&backgroundColor=e8f3eb',
+    // Lorelei style
+    'https://api.dicebear.com/9.x/lorelei/png?seed=Willow&backgroundColor=e8f3eb',
+    'https://api.dicebear.com/9.x/lorelei/png?seed=River&backgroundColor=e8f3eb',
+    'https://api.dicebear.com/9.x/lorelei/png?seed=Sage&backgroundColor=e8f3eb',
+    // Notionists style
+    'https://api.dicebear.com/9.x/notionists/png?seed=Fern&backgroundColor=d1f4e0',
+    'https://api.dicebear.com/9.x/notionists/png?seed=Ivy&backgroundColor=d1f4e0',
+    'https://api.dicebear.com/9.x/notionists/png?seed=Moss&backgroundColor=d1f4e0',
   ];
 
   @override
@@ -54,85 +74,201 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _load() async {
-    setState(() { _loading = true; _error = null; });
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
     _myId = await AuthService.getUserId();
     try {
       final targetId = widget.userId == 0 ? _myId! : widget.userId;
       final data = await ApiService.getProfil(targetId);
       if (mounted) {
-        setState(() { 
-          _data = data; 
-          _loading = false; 
-          
+        setState(() {
+          _data = data;
+          _loading = false;
+
           // Pre-fill controllers
           final profil = data['profil'] as Map<String, dynamic>? ?? {};
           _nameCtrl.text = profil['name']?.toString() ?? '';
           _bioCtrl.text = profil['bio']?.toString() ?? '';
           _selectedCategory = profil['category']?.toString() ?? '';
-          if (!_categories.contains(_selectedCategory) && _selectedCategory.isNotEmpty) {
-             _selectedCategory = _categories.first;
+          if (!_categories.contains(_selectedCategory) &&
+              _selectedCategory.isNotEmpty) {
+            _selectedCategory = _categories.first;
           }
         });
       }
     } on ApiException catch (e) {
-      if (mounted) setState(() { _error = e.message; _loading = false; });
+      if (mounted)
+        setState(() {
+          _error = e.message;
+          _loading = false;
+        });
     } catch (e) {
-      if (mounted) setState(() { _error = 'Gagal memuat profil'; _loading = false; });
+      if (mounted)
+        setState(() {
+          _error = 'Gagal memuat profil';
+          _loading = false;
+        });
     }
   }
 
   void _showChangeAvatarSheet() {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      builder: (ctx) {
-        return Container(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('Pilih Foto Profil', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, fontFamily: 'Poppins')),
-              const SizedBox(height: 20),
-              Wrap(
-                spacing: 16,
-                runSpacing: 16,
-                alignment: WrapAlignment.center,
-                children: _avatars.map((url) => GestureDetector(
-                  onTap: () async {
-                    Navigator.pop(ctx);
-                    setState(() => _loading = true);
-                    try {
-                      await ApiService.updateProfile({'avatar': url});
-                      _load();
-                    } catch (e) {
-                      setState(() => _loading = false);
-                      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Gagal mengubah foto profil', style: TextStyle(fontFamily: 'Poppins', color: Colors.white)), backgroundColor: Colors.redAccent));
-                    }
-                  },
-                  child: CircleAvatar(
-                    radius: 36,
-                    backgroundColor: const Color(0xFFE8F3EB),
-                    backgroundImage: CachedNetworkImageProvider(url),
-                  ),
-                )).toList(),
-              ),
-              const SizedBox(height: 24),
-            ],
-          ),
-        );
-      }
-    );
-  }
-
-  void _showEditProfileSheet() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) {
-        return StatefulBuilder(
-          builder: (BuildContext context, StateSetter setModalState) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.65,
+          minChildSize: 0.4,
+          maxChildSize: 0.85,
+          builder: (_, scrollController) {
+            return Container(
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.surfaceDark : Colors.white,
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(32)),
+              ),
+              child: Column(
+                children: [
+                  // Drag handle
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12, bottom: 8),
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.white24 : Colors.grey[300],
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                    child: Text(
+                      'Pilih Foto Profil',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                        fontFamily: 'Poppins',
+                        color: isDark
+                            ? AppColors.textOnDark
+                            : const Color(0xFF1A4D2E),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Expanded(
+                    child: GridView.builder(
+                      controller: scrollController,
+                      padding: const EdgeInsets.fromLTRB(24, 8, 24, 120),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 3,
+                        crossAxisSpacing: 16,
+                        mainAxisSpacing: 16,
+                      ),
+                      itemCount: _avatars.length,
+                      itemBuilder: (context, index) {
+                        final url = _avatars[index];
+                        return GestureDetector(
+                          onTap: () async {
+                            Navigator.pop(ctx);
+                            setState(() => _loading = true);
+                            try {
+                              await ApiService.updateProfile({'avatar': url});
+                              _load();
+                            } catch (e) {
+                              setState(() => _loading = false);
+                              if (mounted)
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                        content: Text(
+                                            'Gagal mengubah foto profil',
+                                            style: TextStyle(
+                                                fontFamily: 'Poppins',
+                                                color: Colors.white)),
+                                        backgroundColor: Colors.redAccent));
+                            }
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: isDark
+                                  ? AppColors.cardDark
+                                  : const Color(0xFFE8F3EB),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: isDark
+                                    ? Colors.white10
+                                    : const Color(0xFFD0E8D7),
+                                width: 2,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black
+                                      .withOpacity(isDark ? 0 : 0.04),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(18),
+                              child: CachedNetworkImage(
+                                imageUrl: url,
+                                fit: BoxFit.cover,
+                                placeholder: (context, url) => Center(
+                                  child: SizedBox(
+                                      width: 24,
+                                      height: 24,
+                                      child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: isDark
+                                              ? AppColors.primaryGreenMint
+                                              : AppColors.primaryGreen)),
+                                ),
+                                errorWidget: (context, url, error) =>
+                                    const Icon(LucideIcons.userCircle,
+                                        size: 32, color: AppColors.textMuted),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showEditProfileSheet() {
+    showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (ctx) {
+          return StatefulBuilder(
+              builder: (BuildContext context, StateSetter setModalState) {
             bool isSaving = false;
+            final isDark = Theme.of(context).brightness == Brightness.dark;
+            final sheetColor = isDark ? AppColors.surfaceDark : Colors.white;
+            final fieldColor =
+                isDark ? AppColors.cardDark : const Color(0xFFF0F4F1);
+            final primaryTextColor =
+                isDark ? AppColors.textOnDark : const Color(0xFF1A4D2E);
+            final labelColor =
+                isDark ? AppColors.primaryGreenMint : const Color(0xFF2D5A3E);
+            final hintColor =
+                isDark ? AppColors.textMuted : const Color(0xFF888888);
+            final borderColor = isDark ? Colors.white12 : Colors.transparent;
 
             Future<void> saveProfile() async {
               setModalState(() => isSaving = true);
@@ -145,11 +281,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 if (mounted) {
                   Navigator.pop(ctx);
                   _load();
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Profil berhasil diperbarui', style: TextStyle(fontFamily: 'Poppins', color: Colors.white)), backgroundColor: Color(0xFF1A4D2E)));
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                      content: Text('Profil berhasil diperbarui',
+                          style: TextStyle(
+                              fontFamily: 'Poppins', color: Colors.white)),
+                      backgroundColor: Color(0xFF1A4D2E)));
                 }
               } catch (e) {
                 if (mounted) {
-                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal menyimpan profil', style: TextStyle(fontFamily: 'Poppins', color: Colors.white)), backgroundColor: Colors.redAccent));
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text('Gagal menyimpan profil',
+                          style: TextStyle(
+                              fontFamily: 'Poppins', color: Colors.white)),
+                      backgroundColor: Colors.redAccent));
                 }
               } finally {
                 if (mounted) setModalState(() => isSaving = false);
@@ -157,10 +301,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
             }
 
             return Container(
-              padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+              padding:
+                  EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+              decoration: BoxDecoration(
+                color: sheetColor,
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(32)),
               ),
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(24),
@@ -170,126 +316,225 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   children: [
                     Center(
                       child: Container(
-                        width: 40, height: 4,
-                        decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(10)),
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                            color: isDark ? Colors.white24 : Colors.grey[300],
+                            borderRadius: BorderRadius.circular(10)),
                       ),
                     ),
                     const SizedBox(height: 24),
-                    const Text('Edit Profil', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Color(0xFF1A4D2E), fontFamily: 'Poppins')),
+                    Text('Edit Profil',
+                        style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800,
+                            color: primaryTextColor,
+                            fontFamily: 'Poppins')),
                     const SizedBox(height: 24),
-                    
-                    const Text('Nama Lengkap', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF2D5A3E), fontFamily: 'Poppins')),
+                    Text('Nama Lengkap',
+                        style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: labelColor,
+                            fontFamily: 'Poppins')),
                     const SizedBox(height: 8),
                     TextField(
                       controller: _nameCtrl,
-                      style: const TextStyle(fontFamily: 'Poppins', fontSize: 14, color: Color(0xFF1A1A1A), fontWeight: FontWeight.w500),
+                      style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 14,
+                          color: primaryTextColor,
+                          fontWeight: FontWeight.w500),
                       decoration: InputDecoration(
                         hintText: 'Masukkan nama lengkap',
-                        hintStyle: const TextStyle(color: Color(0xFF888888), fontFamily: 'Poppins', fontSize: 14),
-                        filled: true, fillColor: const Color(0xFFF0F4F1),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-                        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: Color(0xFF1A4D2E), width: 1.5)),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                        hintStyle: TextStyle(
+                            color: hintColor,
+                            fontFamily: 'Poppins',
+                            fontSize: 14),
+                        filled: true,
+                        fillColor: fieldColor,
+                        border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide(color: borderColor)),
+                        enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide(color: borderColor)),
+                        focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide(
+                                color: isDark
+                                    ? AppColors.primaryGreenMint
+                                    : Theme.of(context).primaryColor,
+                                width: 1.5)),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 16),
                       ),
                     ),
                     const SizedBox(height: 20),
-                    
-                    const Text('Bio Singkat', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF2D5A3E), fontFamily: 'Poppins')),
+                    Text('Bio Singkat',
+                        style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: labelColor,
+                            fontFamily: 'Poppins')),
                     const SizedBox(height: 8),
                     TextField(
                       controller: _bioCtrl,
                       maxLines: 3,
-                      style: const TextStyle(fontFamily: 'Poppins', fontSize: 14, color: Color(0xFF1A1A1A), fontWeight: FontWeight.w500),
+                      style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 14,
+                          color: primaryTextColor,
+                          fontWeight: FontWeight.w500),
                       decoration: InputDecoration(
                         hintText: 'Ceritakan sedikit tentang dirimu...',
-                        hintStyle: const TextStyle(color: Color(0xFF888888), fontFamily: 'Poppins', fontSize: 14),
-                        filled: true, fillColor: const Color(0xFFF0F4F1),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-                        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: Color(0xFF1A4D2E), width: 1.5)),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                        hintStyle: TextStyle(
+                            color: hintColor,
+                            fontFamily: 'Poppins',
+                            fontSize: 14),
+                        filled: true,
+                        fillColor: fieldColor,
+                        border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide(color: borderColor)),
+                        enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide(color: borderColor)),
+                        focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide(
+                                color: isDark
+                                    ? AppColors.primaryGreenMint
+                                    : Theme.of(context).primaryColor,
+                                width: 1.5)),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 16),
                       ),
                     ),
                     const SizedBox(height: 20),
-                    
-                    const Text('Fokus Utama', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF2D5A3E), fontFamily: 'Poppins')),
+                    Text('Fokus Utama',
+                        style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: labelColor,
+                            fontFamily: 'Poppins')),
                     const SizedBox(height: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF0F4F1),
+                        color: fieldColor,
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.transparent, width: 1.5),
+                        border: Border.all(color: borderColor, width: 1.5),
                       ),
                       child: DropdownButtonHideUnderline(
                         child: DropdownButton<String>(
-                          value: _selectedCategory.isEmpty ? null : _selectedCategory,
+                          value: _selectedCategory.isEmpty
+                              ? null
+                              : _selectedCategory,
                           isExpanded: true,
-                          dropdownColor: Colors.white,
-                          style: const TextStyle(fontFamily: 'Poppins', fontSize: 14, color: Color(0xFF1A1A1A), fontWeight: FontWeight.w500),
-                          hint: const Text('Pilih Fokus', style: TextStyle(fontFamily: 'Poppins', fontSize: 14, color: Color(0xFF888888))),
-                          icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF1A4D2E)),
-                          items: _categories.map((c) => DropdownMenuItem(value: c, child: Text(c, style: const TextStyle(fontFamily: 'Poppins', fontSize: 14, color: Color(0xFF1A1A1A))))).toList(),
+                          dropdownColor: fieldColor,
+                          style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 14,
+                              color: primaryTextColor,
+                              fontWeight: FontWeight.w500),
+                          hint: Text('Pilih Fokus',
+                              style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontSize: 14,
+                                  color: hintColor)),
+                          icon: Icon(Icons.keyboard_arrow_down_rounded,
+                              color: labelColor),
+                          items: _categories
+                              .map((c) => DropdownMenuItem(
+                                  value: c,
+                                  child: Text(c,
+                                      style: TextStyle(
+                                          fontFamily: 'Poppins',
+                                          fontSize: 14,
+                                          color: primaryTextColor))))
+                              .toList(),
                           onChanged: (v) {
-                            if (v != null) setModalState(() => _selectedCategory = v);
+                            if (v != null)
+                              setModalState(() => _selectedCategory = v);
                           },
                         ),
                       ),
                     ),
                     const SizedBox(height: 32),
-                    
                     ElevatedButton(
                       onPressed: isSaving ? null : saveProfile,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primaryGreen,
                         foregroundColor: Colors.white,
                         minimumSize: const Size(double.infinity, 56),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16)),
                         elevation: 0,
                       ),
-                      child: isSaving 
-                        ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                        : const Text('Simpan Perubahan', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, fontFamily: 'Poppins')),
+                      child: isSaving
+                          ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                  color: Colors.white, strokeWidth: 2))
+                          : const Text('Simpan Perubahan',
+                              style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                  fontFamily: 'Poppins')),
                     ),
                     const SizedBox(height: 16),
                   ],
                 ),
               ),
             );
-          }
-        );
-      }
-    );
+          });
+        });
   }
 
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return const Scaffold(backgroundColor: Colors.white, body: Center(child: CircularProgressIndicator(color: AppColors.primaryGreen)));
+      return Scaffold(
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          body: const Center(
+              child: CircularProgressIndicator(color: AppColors.primaryGreen)));
     }
 
     if (_error != null) {
       return Scaffold(
-        backgroundColor: Colors.white,
-        body: Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        body: Center(
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
           const Icon(LucideIcons.wifiOff, color: AppColors.textMuted, size: 48),
           const SizedBox(height: 12),
-          Text(_error!, style: const TextStyle(color: AppColors.textSecondary, fontFamily: 'Poppins')),
+          Text(_error!,
+              style: const TextStyle(
+                  color: AppColors.textSecondary, fontFamily: 'Poppins')),
           const SizedBox(height: 16),
-          ElevatedButton(onPressed: _load, style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryGreen, foregroundColor: Colors.white), child: const Text('Coba Lagi', style: TextStyle(fontFamily: 'Poppins'))),
+          ElevatedButton(
+              onPressed: _load,
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryGreen,
+                  foregroundColor: Colors.white),
+              child: const Text('Coba Lagi',
+                  style: TextStyle(fontFamily: 'Poppins'))),
         ])),
       );
     }
 
     final profil = _data?['profil'] as Map<String, dynamic>? ?? {};
-    final name   = profil['name']?.toString() ?? 'Pengguna';
-    final bio    = profil['bio']?.toString() ?? '';
-    final level  = profil['level']?.toString() ?? 'Pemula';
-    final cat    = profil['category']?.toString() ?? '';
+    final name = profil['name']?.toString() ?? 'Pengguna';
+    final bio = profil['bio']?.toString() ?? '';
+    final level = profil['level']?.toString() ?? 'Pemula';
+    final cat = profil['category']?.toString() ?? '';
     final avatar = profil['avatar']?.toString() ?? '';
-    final isMe   = _myId == widget.userId || widget.userId == 0;
+    final isMe = _myId == widget.userId || widget.userId == 0;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAF9), // Premium soft background
+      backgroundColor:
+          Theme.of(context).scaffoldBackgroundColor, // Dynamic background
       body: SingleChildScrollView(
         child: Stack(
           clipBehavior: Clip.none,
@@ -344,7 +589,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       height: 60,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: const Color(0xFFFFB03A).withOpacity(0.1), // Subtle gold accent
+                        color: const Color(0xFFFFB03A)
+                            .withOpacity(0.1), // Subtle gold accent
                       ),
                     ),
                   ),
@@ -357,7 +603,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         gradient: LinearGradient(
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
-                          colors: [Colors.transparent, Colors.black.withOpacity(0.25)],
+                          colors: [
+                            Colors.transparent,
+                            Colors.black.withOpacity(0.25)
+                          ],
                         ),
                       ),
                     ),
@@ -365,16 +614,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ],
               ),
             ),
-            
+
             // White Container overlapping cover
             Container(
               margin: const EdgeInsets.only(top: 260),
-              decoration: const BoxDecoration(
-                color: Color(0xFFF8FAF9),
-                borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+              decoration: BoxDecoration(
+                color: Theme.of(context).scaffoldBackgroundColor,
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(32)),
               ),
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 60),
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 120),
                 child: Column(
                   children: [
                     // Identity Card overlapping container
@@ -388,31 +638,74 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           width: double.infinity,
                           padding: const EdgeInsets.fromLTRB(24, 60, 24, 24),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: Theme.of(context).cardColor,
                             borderRadius: BorderRadius.circular(32),
-                            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 24, offset: const Offset(0, 8))],
+                            boxShadow: [
+                              BoxShadow(
+                                  color: Colors.black.withOpacity(
+                                      Theme.of(context).brightness ==
+                                              Brightness.dark
+                                          ? 0
+                                          : 0.04),
+                                  blurRadius: 24,
+                                  offset: const Offset(0, 8))
+                            ],
                           ),
                           child: Column(
                             children: [
-                              Text(name, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: Color(0xFF1A4D2E), fontFamily: 'Poppins')),
+                              Text(name,
+                                  style: TextStyle(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.w800,
+                                      color: Theme.of(context)
+                                              .textTheme
+                                              .titleLarge
+                                              ?.color ??
+                                          const Color(0xFF1A4D2E),
+                                      fontFamily: 'Poppins')),
                               const SizedBox(height: 6),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                decoration: BoxDecoration(color: const Color(0xFF1A4D2E).withOpacity(0.06), borderRadius: BorderRadius.circular(12)),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 6),
+                                decoration: BoxDecoration(
+                                    color: const Color(0xFF1A4D2E).withOpacity(
+                                        Theme.of(context).brightness ==
+                                                Brightness.dark
+                                            ? 0.3
+                                            : 0.06),
+                                    borderRadius: BorderRadius.circular(12)),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    const Icon(LucideIcons.award, color: Color(0xFF1A4D2E), size: 14),
+                                    Icon(LucideIcons.award,
+                                        color: Theme.of(context).brightness ==
+                                                Brightness.dark
+                                            ? AppColors.primaryGreenMint
+                                            : const Color(0xFF1A4D2E),
+                                        size: 14),
                                     const SizedBox(width: 6),
-                                    Text('$level • $cat', style: const TextStyle(color: Color(0xFF1A4D2E), fontWeight: FontWeight.w700, fontSize: 12, fontFamily: 'Poppins')),
+                                    Text('$level • $cat',
+                                        style: TextStyle(
+                                            color:
+                                                Theme.of(context).brightness ==
+                                                        Brightness.dark
+                                                    ? AppColors.primaryGreenMint
+                                                    : const Color(0xFF1A4D2E),
+                                            fontWeight: FontWeight.w700,
+                                            fontSize: 12,
+                                            fontFamily: 'Poppins')),
                                   ],
                                 ),
                               ),
                               if (bio.isNotEmpty) ...[
                                 const SizedBox(height: 16),
                                 Text(
-                                  bio, 
-                                  style: const TextStyle(fontSize: 13, color: AppColors.textSecondary, fontFamily: 'Poppins', height: 1.5),
+                                  bio,
+                                  style: const TextStyle(
+                                      fontSize: 13,
+                                      color: AppColors.textSecondary,
+                                      fontFamily: 'Poppins',
+                                      height: 1.5),
                                   textAlign: TextAlign.center,
                                 ),
                               ],
@@ -431,16 +724,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 decoration: BoxDecoration(
                                   color: const Color(0xFFE8F3EB),
                                   shape: BoxShape.circle,
-                                  border: Border.all(color: Colors.white, width: 4),
-                                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4))],
-                                  image: avatar.isNotEmpty ? DecorationImage(image: CachedNetworkImageProvider(avatar), fit: BoxFit.cover) : null,
+                                  border: Border.all(
+                                      color: Theme.of(context)
+                                          .scaffoldBackgroundColor,
+                                      width: 4),
+                                  boxShadow: [
+                                    BoxShadow(
+                                        color: Colors.black.withOpacity(0.1),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 4))
+                                  ],
+                                  image: avatar.isNotEmpty
+                                      ? DecorationImage(
+                                          image: CachedNetworkImageProvider(
+                                              avatar),
+                                          fit: BoxFit.cover)
+                                      : null,
                                 ),
-                                child: avatar.isEmpty ? Center(
-                                  child: Text(
-                                    name.isNotEmpty ? name[0].toUpperCase() : '?',
-                                    style: const TextStyle(fontSize: 36, fontWeight: FontWeight.w800, color: Color(0xFF1A4D2E), fontFamily: 'Poppins'),
-                                  ),
-                                ) : null,
+                                child: avatar.isEmpty
+                                    ? Center(
+                                        child: Text(
+                                          name.isNotEmpty
+                                              ? name[0].toUpperCase()
+                                              : '?',
+                                          style: TextStyle(
+                                              fontSize: 36,
+                                              fontWeight: FontWeight.w800,
+                                              color: Theme.of(context)
+                                                      .textTheme
+                                                      .titleLarge
+                                                      ?.color ??
+                                                  const Color(0xFF1A4D2E),
+                                              fontFamily: 'Poppins'),
+                                        ),
+                                      )
+                                    : null,
                               ),
                               if (isMe)
                                 GestureDetector(
@@ -450,9 +768,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     decoration: BoxDecoration(
                                       color: AppColors.primaryGreen,
                                       shape: BoxShape.circle,
-                                      border: Border.all(color: Colors.white, width: 3),
+                                      border: Border.all(
+                                          color: Theme.of(context)
+                                              .scaffoldBackgroundColor,
+                                          width: 3),
                                     ),
-                                    child: const Icon(LucideIcons.camera, color: Colors.white, size: 14),
+                                    child: const Icon(LucideIcons.camera,
+                                        color: Colors.white, size: 14),
                                   ),
                                 ),
                             ],
@@ -460,10 +782,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                       ],
                     ),
-                    
+
                     const SizedBox(height: 24),
                     _buildStats(),
-                    
+
+                    const SizedBox(height: 24),
+                    _buildImpactChart(),
+
                     const SizedBox(height: 32),
                     _buildBadges(),
 
@@ -473,28 +798,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
             ),
-            
+
             // Top Actions
             SafeArea(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     context.canPop()
                         ? Container(
-                            decoration: BoxDecoration(color: Colors.black.withOpacity(0.15), shape: BoxShape.circle),
+                            decoration: BoxDecoration(
+                                color: Colors.black.withOpacity(0.15),
+                                shape: BoxShape.circle),
                             child: IconButton(
-                              icon: const Icon(LucideIcons.arrowLeft, color: Colors.white),
+                              icon: const Icon(LucideIcons.arrowLeft,
+                                  color: Colors.white),
                               onPressed: () => context.pop(),
                             ),
                           )
                         : const SizedBox.shrink(),
                     isMe
                         ? Container(
-                            decoration: BoxDecoration(color: Colors.black.withOpacity(0.15), shape: BoxShape.circle),
+                            decoration: BoxDecoration(
+                                color: Colors.black.withOpacity(0.15),
+                                shape: BoxShape.circle),
                             child: IconButton(
-                              icon: const Icon(LucideIcons.logOut, color: Colors.white),
+                              icon: const Icon(LucideIcons.logOut,
+                                  color: Colors.white),
                               onPressed: () async {
                                 await AuthService.logout();
                                 if (mounted) context.go('/masuk');
@@ -513,19 +845,159 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildStats() {
-    final profil  = _data?['profil'] as Map<String, dynamic>? ?? {};
-    final points  = (profil['reputation_points'] as num? ?? 0).toInt();
-    final carbon  = (_data?['total_karbon_kg'] as num? ?? profil['total_carbon_saved'] as num? ?? 0.0).toDouble();
-    final tasks   = (_data?['tugas_selesai'] as num? ?? 0).toInt();
+    final profil = _data?['profil'] as Map<String, dynamic>? ?? {};
+    final points = (profil['reputation_points'] as num? ?? 0).toInt();
+    final carbon = (_data?['total_karbon_kg'] as num? ??
+            profil['total_carbon_saved'] as num? ??
+            0.0)
+        .toDouble();
+    final tasks = (_data?['tugas_selesai'] as num? ?? 0).toInt();
 
     return Row(
       children: [
-        Expanded(child: _StatTile(label: 'Total Poin', value: '$points', icon: LucideIcons.star, iconColor: AppColors.accentAmber, bgColor: AppColors.accentAmberSoft)),
+        Expanded(
+            child: _StatTile(
+                label: 'Total Poin',
+                value: '$points',
+                icon: LucideIcons.star,
+                iconColor: AppColors.accentAmber,
+                bgColor: AppColors.accentAmberSoft)),
         const SizedBox(width: 12),
-        Expanded(child: _StatTile(label: 'Total Aksi', value: '$tasks', icon: LucideIcons.checkCircle2, iconColor: const Color(0xFF3B82F6), bgColor: const Color(0xFFEFF6FF))),
+        Expanded(
+            child: _StatTile(
+                label: 'Total Aksi',
+                value: '$tasks',
+                icon: LucideIcons.checkCircle2,
+                iconColor: const Color(0xFF3B82F6),
+                bgColor: const Color(0xFFEFF6FF))),
         const SizedBox(width: 12),
-        Expanded(child: _StatTile(label: 'CO₂ Hemat', value: carbon.toStringAsFixed(1), icon: LucideIcons.leaf, iconColor: const Color(0xFF4FC87A), bgColor: const Color(0xFFE8F3EB))),
+        Expanded(
+            child: _StatTile(
+                label: 'CO₂ Hemat',
+                value: carbon.toStringAsFixed(1),
+                icon: LucideIcons.leaf,
+                iconColor: const Color(0xFF4FC87A),
+                bgColor: const Color(0xFFE8F3EB))),
       ],
+    );
+  }
+
+  Widget _buildImpactChart() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryTextColor =
+        isDark ? AppColors.primaryGreenMint : const Color(0xFF1A4D2E);
+
+    final weeklyImpactList = _data?['weekly_impact'] as List<dynamic>? ?? [];
+    final spots = <FlSpot>[];
+    double maxImpact = 1.0;
+    for (int i = 0; i < 7; i++) {
+      double val = (weeklyImpactList.length > i)
+          ? (weeklyImpactList[i] as num).toDouble()
+          : 0.0;
+      if (val > maxImpact) maxImpact = val;
+      spots.add(FlSpot(i.toDouble(), val));
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withOpacity(isDark ? 0 : 0.02),
+              blurRadius: 16,
+              offset: const Offset(0, 4))
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(LucideIcons.trendingUp, color: primaryTextColor, size: 20),
+              const SizedBox(width: 8),
+              Text('Dampak 7 Hari Terakhir',
+                  style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      fontFamily: 'Poppins',
+                      color: primaryTextColor)),
+            ],
+          ),
+          const SizedBox(height: 24),
+          SizedBox(
+            height: 180,
+            child: LineChart(
+              LineChartData(
+                gridData: FlGridData(show: false),
+                titlesData: FlTitlesData(
+                  rightTitles:
+                      AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  topTitles:
+                      AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 22,
+                      interval: 1,
+                      getTitlesWidget: (value, meta) {
+                        const days = [
+                          'Sen',
+                          'Sel',
+                          'Rab',
+                          'Kam',
+                          'Jum',
+                          'Sab',
+                          'Min'
+                        ];
+                        if (value.toInt() >= 0 && value.toInt() < days.length) {
+                          return Text(days[value.toInt()],
+                              style: const TextStyle(
+                                  color: AppColors.textMuted,
+                                  fontSize: 10,
+                                  fontFamily: 'Poppins',
+                                  fontWeight: FontWeight.w600));
+                        }
+                        return const Text('');
+                      },
+                    ),
+                  ),
+                  leftTitles:
+                      AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                ),
+                borderData: FlBorderData(show: false),
+                minX: 0,
+                maxX: 6,
+                minY: 0,
+                maxY: maxImpact * 1.2,
+                lineBarsData: [
+                  LineChartBarData(
+                    spots: spots,
+                    isCurved: true,
+                    color: AppColors.primaryGreenMint,
+                    barWidth: 4,
+                    isStrokeCapRound: true,
+                    dotData: FlDotData(show: false),
+                    belowBarData: BarAreaData(
+                      show: true,
+                      gradient: LinearGradient(
+                        colors: [
+                          AppColors.primaryGreenMint
+                              .withOpacity(isDark ? 0.5 : 0.3),
+                          AppColors.primaryGreenMint.withOpacity(0.0)
+                        ],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -536,11 +1008,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Row(
+        Row(
           children: [
-            Icon(LucideIcons.medal, color: Color(0xFF1A4D2E), size: 20),
-            SizedBox(width: 8),
-            Text('Lencana Prestasi', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, fontFamily: 'Poppins', color: Color(0xFF1A4D2E))),
+            Icon(LucideIcons.medal,
+                color: Theme.of(context).textTheme.titleLarge?.color ??
+                    const Color(0xFF1A4D2E),
+                size: 20),
+            const SizedBox(width: 8),
+            Text('Lencana Prestasi',
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    fontFamily: 'Poppins',
+                    color: Theme.of(context).textTheme.titleLarge?.color ??
+                        const Color(0xFF1A4D2E))),
           ],
         ),
         const SizedBox(height: 16),
@@ -548,12 +1029,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ? Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))]),
+                decoration: BoxDecoration(
+                    color: Theme.of(context).cardColor,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                          color: Colors.black.withOpacity(
+                              Theme.of(context).brightness == Brightness.dark
+                                  ? 0
+                                  : 0.02),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4))
+                    ]),
                 child: const Column(
                   children: [
-                    Icon(LucideIcons.sprout, color: AppColors.textMuted, size: 40),
+                    Icon(LucideIcons.sprout,
+                        color: AppColors.textMuted, size: 40),
                     SizedBox(height: 12),
-                    Text('Selesaikan aksi pertamamu untuk mendapatkan lencana!', style: TextStyle(color: AppColors.textSecondary, fontFamily: 'Poppins', fontSize: 13), textAlign: TextAlign.center),
+                    Text('Selesaikan aksi pertamamu untuk mendapatkan lencana!',
+                        style: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontFamily: 'Poppins',
+                            fontSize: 13),
+                        textAlign: TextAlign.center),
                   ],
                 ),
               )
@@ -571,13 +1069,40 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 itemBuilder: (_, i) {
                   final badge = badges[i];
                   return Container(
-                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))]),
+                    decoration: BoxDecoration(
+                        color: Theme.of(context).cardColor,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                              color: Colors.black.withOpacity(
+                                  Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? 0
+                                      : 0.02),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4))
+                        ]),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(badge['icon_url']?.isNotEmpty == true ? badge['icon_url'] : '🏅', style: const TextStyle(fontSize: 32)),
+                        Text(
+                            badge['icon_url']?.isNotEmpty == true
+                                ? badge['icon_url']
+                                : '🏅',
+                            style: const TextStyle(fontSize: 32)),
                         const SizedBox(height: 8),
-                        Text(badge['name'] ?? '', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, fontFamily: 'Poppins', color: Color(0xFF1A4D2E)), textAlign: TextAlign.center, maxLines: 2),
+                        Text(badge['name'] ?? '',
+                            style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                fontFamily: 'Poppins',
+                                color: Theme.of(context)
+                                        .textTheme
+                                        .titleLarge
+                                        ?.color ??
+                                    const Color(0xFF1A4D2E)),
+                            textAlign: TextAlign.center,
+                            maxLines: 2),
                       ],
                     ),
                   );
@@ -591,19 +1116,81 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (!isMe) return const SizedBox.shrink();
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(24),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 16, offset: const Offset(0, 4))],
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withOpacity(
+                  Theme.of(context).brightness == Brightness.dark ? 0 : 0.02),
+              blurRadius: 16,
+              offset: const Offset(0, 4))
+        ],
       ),
       child: Column(
         children: [
-          _buildMenuTile(LucideIcons.userCircle, 'Informasi Pribadi', true, _showEditProfileSheet),
-          const Divider(height: 1, color: Color(0xFFF0F0F0)),
-          _buildMenuTile(LucideIcons.bell, 'Notifikasi', true, () => _showMsg('Belum ada notifikasi baru.')),
-          const Divider(height: 1, color: Color(0xFFF0F0F0)),
-          _buildMenuTile(LucideIcons.shieldCheck, 'Privasi & Keamanan', true, () => context.push('/privasi')),
-          const Divider(height: 1, color: Color(0xFFF0F0F0)),
-          _buildMenuTile(LucideIcons.helpCircle, 'Pusat Bantuan', true, () => context.push('/bantuan')),
+          _buildMenuTile(LucideIcons.userCircle, 'Informasi Pribadi', true,
+              _showEditProfileSheet),
+          Divider(
+              height: 1,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.white10
+                  : const Color(0xFFF0F0F0)),
+          Consumer<ThemeProvider>(
+            builder: (context, themeProvider, child) {
+              return ListTile(
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.black26
+                          : const Color(0xFFF5F7F5),
+                      borderRadius: BorderRadius.circular(10)),
+                  child: Icon(LucideIcons.moon,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? AppColors.primaryGreenMint
+                          : const Color(0xFF1A4D2E),
+                      size: 20),
+                ),
+                title: Text('Mode Gelap',
+                    style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Theme.of(context).textTheme.titleLarge?.color ??
+                            const Color(0xFF1A4D2E))),
+                trailing: Switch(
+                  value: themeProvider.isDarkMode,
+                  onChanged: (val) => themeProvider.toggleTheme(val),
+                  activeColor: AppColors.primaryGreen,
+                ),
+                onTap: () =>
+                    themeProvider.toggleTheme(!themeProvider.isDarkMode),
+              );
+            },
+          ),
+          Divider(
+              height: 1,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.white10
+                  : const Color(0xFFF0F0F0)),
+          _buildMenuTile(LucideIcons.bell, 'Notifikasi', true,
+              () => _showMsg('Belum ada notifikasi baru.')),
+          Divider(
+              height: 1,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.white10
+                  : const Color(0xFFF0F0F0)),
+          _buildMenuTile(LucideIcons.shieldCheck, 'Privasi & Keamanan', true,
+              () => context.push('/privasi')),
+          Divider(
+              height: 1,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.white10
+                  : const Color(0xFFF0F0F0)),
+          _buildMenuTile(LucideIcons.helpCircle, 'Pusat Bantuan', true,
+              () => context.push('/bantuan')),
         ],
       ),
     );
@@ -611,22 +1198,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   void _showMsg(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(msg, style: const TextStyle(fontFamily: 'Poppins', color: Colors.white)),
+      content: Text(msg,
+          style: const TextStyle(fontFamily: 'Poppins', color: Colors.white)),
       backgroundColor: const Color(0xFF1A4D2E),
       behavior: SnackBarBehavior.floating,
     ));
   }
 
-  Widget _buildMenuTile(IconData icon, String title, bool hasArrow, VoidCallback onTap) {
+  Widget _buildMenuTile(
+      IconData icon, String title, bool hasArrow, VoidCallback onTap) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
       leading: Container(
         padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(color: const Color(0xFFF5F7F5), borderRadius: BorderRadius.circular(10)),
-        child: Icon(icon, color: const Color(0xFF1A4D2E), size: 20),
+        decoration: BoxDecoration(
+            color: isDark ? Colors.black26 : const Color(0xFFF5F7F5),
+            borderRadius: BorderRadius.circular(10)),
+        child: Icon(icon,
+            color:
+                isDark ? AppColors.primaryGreenMint : const Color(0xFF1A4D2E),
+            size: 20),
       ),
-      title: Text(title, style: const TextStyle(fontFamily: 'Poppins', fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF1A4D2E))),
-      trailing: hasArrow ? const Icon(LucideIcons.chevronRight, size: 20, color: Colors.black26) : null,
+      title: Text(title,
+          style: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Theme.of(context).textTheme.titleLarge?.color ??
+                  const Color(0xFF1A4D2E))),
+      trailing: hasArrow
+          ? Icon(LucideIcons.chevronRight,
+              size: 20, color: isDark ? Colors.white30 : Colors.black26)
+          : null,
       onTap: onTap,
     );
   }
@@ -638,27 +1242,54 @@ class _StatTile extends StatelessWidget {
   final IconData icon;
   final Color iconColor;
   final Color bgColor;
-  const _StatTile({required this.label, required this.value, required this.icon, required this.iconColor, required this.bgColor});
+  const _StatTile(
+      {required this.label,
+      required this.value,
+      required this.icon,
+      required this.iconColor,
+      required this.bgColor});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 12, offset: const Offset(0, 6))],
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withOpacity(
+                  Theme.of(context).brightness == Brightness.dark ? 0 : 0.02),
+              blurRadius: 12,
+              offset: const Offset(0, 6))
+        ],
       ),
       child: Column(children: [
         Container(
           padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(color: bgColor, shape: BoxShape.circle),
+          decoration: BoxDecoration(
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.black26
+                  : bgColor,
+              shape: BoxShape.circle),
           child: Icon(icon, color: iconColor, size: 20),
         ),
         const SizedBox(height: 12),
-        Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Color(0xFF1A4D2E), fontFamily: 'Poppins'), maxLines: 1),
+        Text(value,
+            style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: Theme.of(context).textTheme.titleLarge?.color ??
+                    const Color(0xFF1A4D2E),
+                fontFamily: 'Poppins'),
+            maxLines: 1),
         const SizedBox(height: 2),
-        Text(label, style: const TextStyle(fontSize: 11, color: AppColors.textSecondary, fontFamily: 'Poppins', fontWeight: FontWeight.w500)),
+        Text(label,
+            style: const TextStyle(
+                fontSize: 11,
+                color: AppColors.textSecondary,
+                fontFamily: 'Poppins',
+                fontWeight: FontWeight.w500)),
       ]),
     );
   }
