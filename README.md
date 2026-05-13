@@ -238,25 +238,6 @@ git clone https://github.com/FadhilRizqi1/Personal-Project.git
 cd Personal-Project/EcoConnect
 ```
 
-Create a **`.env`** file in the root `EcoConnect/` folder (alongside the `backend/` and `frontend/` folders):
-
-```env
-# ── Database (Supabase PostgreSQL) ────────────────────────────
-DB_HOST=aws-0-ap-southeast-1.pooler.supabase.com
-DB_PORT=6543
-DB_USER=postgres.YOUR_PROJECT_REF
-DB_PASSWORD=YOUR_DB_PASSWORD
-DB_NAME=postgres
-
-# ── JWT Secret ────────────────────────────────────────────────
-JWT_SECRET=change_this_with_a_long_random_secret_key
-
-# ── Server ────────────────────────────────────────────────────
-APP_PORT=8080
-```
-
-> ⚠️ **Important:** Replace `YOUR_PROJECT_REF` and `YOUR_DB_PASSWORD` with your Supabase credentials.
-
 ---
 
 ### 2. Database Setup (Supabase)
@@ -264,7 +245,7 @@ APP_PORT=8080
 1. Go to [supabase.com](https://supabase.com) → create a new project
 2. Navigate to **Settings → Database → Connection Pooling**
 3. Select **Transaction** mode and copy the connection string
-4. Fill in the details in the `.env` file as shown above
+4. Fill in the details in the `.env` file
 
 > ✅ **No need to create tables manually.** GORM AutoMigrate will automatically create all tables when the backend runs for the first time. Initial seed data (12 actions + 5 communities) will also be populated automatically.
 
